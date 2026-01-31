@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="accentLine" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D4FF"/>
+      <stop offset="100%" stop-color="#0099CC"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Stylized geometric N - no background -->
+  <!-- Left vertical -->
+  <path d="M12 8 L12 56" stroke="#1A1A2E" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- Diagonal accent -->
+  <path d="M12 8 L52 56" stroke="url(#accentLine)" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- Right vertical -->
+  <path d="M52 8 L52 56" stroke="#1A1A2E" stroke-width="7" stroke-linecap="round"/>
+</svg>

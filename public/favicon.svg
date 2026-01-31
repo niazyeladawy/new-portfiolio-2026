@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D4FF"/>
+      <stop offset="100%" stop-color="#0099CC"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="64" height="64" rx="8" fill="#0D1117"/>
+
+  <!-- Stylized N with code bracket aesthetic -->
+  <!-- Left vertical stroke -->
+  <path d="M16 12 L16 52" stroke="#E6EDF3" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Diagonal stroke with gradient accent -->
+  <path d="M16 12 L48 52" stroke="url(#accentGradient)" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Right vertical stroke -->
+  <path d="M48 12 L48 52" stroke="#E6EDF3" stroke-width="6" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="cyanGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00E5FF"/>
+      <stop offset="100%" stop-color="#00B8D4"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="64" height="64" rx="10" fill="#0A0E14"/>
+
+  <!-- Code bracket left < integrated with N -->
+  <path d="M12 32 L20 22 M12 32 L20 42" stroke="#4A5568" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Stylized N - main element -->
+  <g transform="translate(18, 14)">
+    <!-- Left stroke -->
+    <path d="M4 0 L4 36" stroke="#E2E8F0" stroke-width="5" stroke-linecap="round"/>
+
+    <!-- Diagonal with accent -->
+    <path d="M4 0 L28 36" stroke="url(#cyanGradient)" stroke-width="5" stroke-linecap="round"/>
+
+    <!-- Right stroke -->
+    <path d="M28 0 L28 36" stroke="#E2E8F0" stroke-width="5" stroke-linecap="round"/>
+  </g>
+
+  <!-- Code bracket right > -->
+  <path d="M52 32 L44 22 M52 32 L44 42" stroke="#4A5568" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
