@@ -1,0 +1,258 @@
+{
+  "hero": {
+    "badge": "Senior Frontend Developer — Dubai, UAE",
+    "name": {
+      "first": "Niazy",
+      "last": "Eladawy."
+    },
+    "description": "I craft immersive web experiences and scalable web applications using React, Next.js, Vue.js, Nuxt.js, and Three.js.",
+    "roles": [
+      "Frontend Developer",
+      "UI Systems Engineer",
+      "3D Web Developer"
+      
+      
+    ],
+    "cta": "View Work",
+    "ctaHref": "#projects",
+    "scrollLabel": "Scroll"
+  },
+  "about": {
+    "sectionLabel": "About me",
+    "stats": [
+      {
+        "value": "5+",
+        "label": "Years exp."
+      },
+      {
+        "value": "35+",
+        "label": "Apps shipped"
+      },
+     {
+  "value": "95+",
+  "label": "Lighthouse scores"
+}
+    ],
+    "tags": [
+      "React.js",
+      "Next.js",
+      "TypeScript",
+      "Vue.js",
+      "Nuxt.js",
+      "Three.js",
+      "Babylon.js",
+      "GSAP",
+      "Node.js",
+      "GraphQL",
+      "REST APIs",
+      "Microfrontends",
+      "Frontend Architecture",
+      "Docker",
+      "CI/CD",
+      "Performance Optimization",
+      "SEO",
+      "Accessibility"
+    ],
+    "chapters": [
+      {
+        "num": "01",
+        "lines": [
+          {
+            "text": "I build things"
+          },
+          {
+            "text": "that ",
+            "italic": "move"
+          }
+        ],
+        "body": "Started as a kid who couldn't leave a UI alone without adding one more animation. Now I break things on purpose — and fix them 40ms faster every time."
+      },
+      {
+        "num": "02",
+        "lines": [
+          {
+            "text": "Frontend is"
+          },
+          {
+            "text": "my ",
+            "italic": "medium"
+          }
+        ],
+        "body": "I live inside the 16ms budget. WebGL shaders, scroll choreography, magnetic cursors — the layer most developers call polish is where I spend most of my time."
+      },
+      {
+        "num": "03",
+        "lines": [
+          {
+            "text": "Building the"
+          },
+          {
+            "text": "next ",
+            "italic": "layer"
+          }
+        ],
+        "body": "Currently crafting immersive digital products in Dubai. Looking for ambitious projects where the bar is set by the work — not the brief."
+      }
+    ]
+  },
+  "contact": {
+    "sectionNum": "04",
+    "sectionLabel": "Get in touch",
+    "email": "niazyadawy2@gmail.com",
+    "headlineLines": [
+      {
+        "words": [
+          "Let's",
+          "build"
+        ],
+        "italic": false
+      },
+      {
+        "words": [
+          "something"
+        ],
+        "italic": true
+      },
+      {
+        "words": [
+          "remarkable."
+        ],
+        "italic": false
+      }
+    ],
+    "socials": [
+      {
+        "label": "LinkedIn",
+        "href": "https://www.linkedin.com/in/niazy-eladawy"
+      },
+      {
+        "label": "GitHub",
+        "href": "https://github.com/niazyeladawy"
+      },
+      {
+        "label": "Website",
+        "href": "https://www.niazyeladawy.com"
+      }
+    ],
+    "footer": {
+      "left": "Niazy Eladawy",
+      "right": "Dubai, UAE"
+    }
+  },
+  "stackCards": {
+    "sectionLabel": "Selected work",
+    "viewProjectLabel": "View project",
+    "items": [
+      {
+        "num": "01",
+        "title": "3D Vehicle Configurator — Magnite",
+        "description": "Real-time 3D car configurator built with Three.js And Babylon.js. Users customize colors, accessories, and environments — with AR viewing — entirely in the browser, no plugin required.",
+        "link": "https://nsa.magniteconfigurator.com/",
+        "image": "portfolio/magnite_portfolio_case_study.png",
+        "bg": "#c44a1f",
+        "accent": "#1a0a02"
+      },
+      {
+        "num": "02",
+        "title": "Automotive Microsites — GCC Campaigns",
+        "description": "Series of high-impact campaign microsites deployed across GCC markets — cinematic scroll animations, multilingual support, and market-specific performance tuning.",
+        "link": "",
+        "links": [
+          {
+            "label": "Magnite Experience",
+            "href": "https://en.allnewmagnite.nissan-saudiarabia.com/"
+          },
+          {
+            "label": "Patrol Experience",
+            "href": "https://en.allnewpatrol-staging.nissan-dubai.com/"
+          },
+          {
+            "label": "Z Performance Experience",
+            "href": "https://en.znismo.nissan-dubai.com/"
+          },
+          {
+            "label": "Patrol NISMO Experience",
+            "href": "https://en.patrolnismo.nissan-dubai.com/"
+          }
+        ],
+        "image": "portfolio/nissan_campaign_composition.jpg",
+        "bg": "#d4926b",
+        "accent": "#1f1208"
+      },
+      {
+        "num": "03",
+        "title": "Automotive E-Commerce Platform",
+        "description": "Full-featured e-commerce system for automotive parts — search, filtering, cart, and checkout — built for performance and cross-browser reliability.",
+        "link": "https://parts-ecom.alt-test-server.com/",
+        "image": "portfolio/nissan_showcase_composition.jpg",
+        "bg": "#f0ebe0",
+        "accent": "#060606"
+      },
+      {
+        "num": "04",
+        "title": "Creative Studio Website",
+        "description": "Agency website for Alternative built around 3D visual storytelling and immersive motion. Every section designed to hold attention and communicate craft.",
+        "link": "https://www.alternative.agency/",
+        "image": "portfolio/alternative_agency_composition.jpg",
+        "bg": "#5fbce5",
+        "accent": "#08192d"
+      },
+      {
+        "num": "05",
+        "title": "SaaS Accounting Platform — Fatoorah",
+        "description": "Arabic-first marketing site for a multi-tenant SaaS invoicing platform. Focused on clarity, conversion, and building trust with regional business audiences.",
+        "link": "https://fatoorah.ai/",
+        "image": "portfolio/fatoorah_composition.jpg",
+        "bg": "#3dffa0",
+        "accent": "#091a12"
+      },
+      {
+        "num": "06",
+        "title": "Certified Pre-Owned Listings Platform",
+        "description": "Vehicle listing platform for Nissan's certified pre-owned inventory — streamlined browsing, smart filtering, and a UX built around purchase confidence.",
+        "link": "https://du-front.nissanusedcars.me/",
+        "image": "portfolio/nissan_usedcars_composition.jpg",
+        "bg": "#f0ebe0",
+        "accent": "#060606"
+      },
+      {
+        "num": "07",
+        "title": "Interactive Showroom Experience",
+        "description": "Tablet-based showroom experience with gamified engagement mechanics — built to extend visitor dwell time and deepen brand interaction on the floor.",
+        "link": "https://table.nissan-web-apps.com/",
+        "image": "portfolio/nissan_ramadan_table_composition.jpg",
+        "bg": "#c19968",
+        "accent": "#231708"
+      },
+      {
+        "num": "08",
+        "title": "Marketing Landing Page — MBR",
+        "description": "Premium landing page with layered scroll animations and a confident visual identity. Built to convert, designed to make an impression.",
+        "link": "https://mbrmarketing.me/",
+        "image": "portfolio/mbr_marketing_composition.jpg",
+        "bg": "#ff5b2e",
+        "accent": "#1a0a02"
+      }
+    ]
+  },
+  "_experienceBullets": {
+    "_note": "Improved bullets for CV / about section — same facts, sharper framing",
+    "alternative": [
+      "Led frontend architecture across enterprise CMS and e-commerce platforms for Ford and Nissan, shipping across 6+ international markets on schedule.",
+      "Designed a scalable microfrontend architecture in Next.js and React — enabling independent team deployments and cutting cross-team friction significantly.",
+      "Delivered SSR/SSG-powered sites with GSAP animation pipelines, lifting page load speed by 30%+ and organic SEO visibility by 20%+.",
+      "Built Nissan's Magnite 3D configurator in Babylon.js with AR, multi-angle cameras, and real-time customization — measurably increasing session depth.",
+      "Designed and shipped an internal Digital Asset Management platform for Nissan — role-based access, metadata tagging, and multi-market media delivery.",
+      "Replaced 8-hour manual deployments with Docker + GitHub Actions CI/CD pipelines, cutting release time to under 5 minutes.",
+      "Mentored 3+ junior developers, established code review standards, and architected reusable patterns that improved long-term team velocity."
+    ],
+    "accura": [
+      "Delivered 15+ production web applications across SaaS, e-commerce, dashboards, and marketing — all mobile-first and cross-browser.",
+      "Built the Fatoorah multi-tenant SaaS dashboard in React.js — covering inventory, POS, warehouses, and buyer/seller management.",
+      "Consistently cut load times by 30%+ through code-splitting, lazy loading, and disciplined caching strategies."
+    ],
+    "blink": [
+      "Built responsive, accessible UI components in HTML, CSS, JavaScript, and React — working directly with designers and backend engineers to hit pixel-perfect results."
+    ]
+  }
+}

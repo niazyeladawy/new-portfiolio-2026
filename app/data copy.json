@@ -1,0 +1,205 @@
+{
+  "hero": {
+    "badge": "Senior Frontend Developer — Dubai, UAE",
+    "name": {
+      "first": "Niazy",
+      "last": "Eladawy."
+    },
+    "description": "Building immersive 3D experiences & scalable web applications. React, Next.js, Three.js, Babylon.js.",
+    "roles": [
+      "Frontend Developer",
+      "WebGL Engineer",
+      "Motion Craftsman"
+    ],
+    "cta": "View Work",
+    "ctaHref": "#projects",
+    "scrollLabel": "Scroll"
+  },
+  "about": {
+    "sectionLabel": "About me",
+    "stats": [
+      { "value": "5+", "label": "Years exp." },
+      { "value": "35+", "label": "Apps shipped" },
+      { "value": "6", "label": "Markets" }
+    ],
+    "tags": [
+      "React.js",
+      "Next.js",
+      "TypeScript",
+      "Vue.js",
+      "Three.js",
+      "Babylon.js",
+      "GSAP",
+      "Node.js",
+      "GraphQL",
+      "REST APIs",
+      "Microfrontends",
+      "Frontend Architecture",
+      "Docker",
+      "CI/CD",
+      "Vercel",
+      "Performance Optimization",
+      "SEO",
+      "Accessibility"
+    ],
+    "chapters": [
+      {
+        "num": "01",
+        "lines": [
+          { "text": "I build things" },
+          { "text": "that ", "italic": "move" }
+        ],
+        "body": "Started as a kid who broke every UI component trying to add one more animation. Now I break them on purpose — and fix them 40ms faster each time."
+      },
+      {
+        "num": "02",
+        "lines": [
+          { "text": "Frontend is" },
+          { "text": "my ", "italic": "medium" }
+        ],
+        "body": "I obsess over the 16ms budget. WebGL shaders, scroll choreography, magnetic cursors — the things most developers call 'nice to have' are what I build first."
+      },
+      {
+        "num": "03",
+        "lines": [
+          { "text": "Building the" },
+          { "text": "next ", "italic": "layer" }
+        ],
+        "body": "Currently crafting immersive digital experiences in Dubai. Open to ambitious projects where the bar is set by the work, not the brief."
+      }
+    ]
+  },
+  "contact": {
+    "sectionNum": "04",
+    "sectionLabel": "Get in touch",
+    "email": "niazyadawy2@gmail.com",
+    "headlineLines": [
+      {
+        "words": ["Let's", "build"],
+        "italic": false
+      },
+      {
+        "words": ["something"],
+        "italic": true
+      },
+      {
+        "words": ["remarkable."],
+        "italic": false
+      }
+    ],
+    "socials": [
+      {
+        "label": "LinkedIn",
+        "href": "https://www.linkedin.com/in/niazy-eladawy"
+      },
+      {
+        "label": "GitHub",
+        "href": "https://github.com/niazyeladawy"
+      },
+      {
+        "label": "Website",
+        "href": "https://www.niazyeladawy.com"
+      }
+    ],
+    "footer": {
+      "left": "Niazy Eladawy",
+      "right": "Dubai, UAE"
+    }
+  },
+  "stackCards": {
+    "sectionLabel": "Selected work",
+    "viewProjectLabel": "View project",
+    "items": [
+      {
+        "num": "01",
+        "title": "3D Vehicle Configurator — Magnite",
+        "description": "Immersive 3D car configurator allowing real-time customization of colors, accessories, environments, and AR viewing directly in the browser.",
+        "link": "https://nsa.magniteconfigurator.com/",
+        "image": "portfolio/magnite_portfolio_case_study.png",
+        "bg": "#c44a1f",
+        "accent": "#1a0a02"
+      },
+      {
+        "num": "02",
+        "title": "Automotive Microsites — GCC Campaigns",
+        "description": "Series of high-impact interactive microsites deployed across regional markets with cinematic motion design and multilingual support.",
+        "link": "",
+        "links": [
+          {
+            "label": "Magnite Experience",
+            "href": "https://en.allnewmagnite.nissan-saudiarabia.com/"
+          },
+          {
+            "label": "Patrol Experience",
+            "href": "https://en.allnewpatrol-staging.nissan-dubai.com/"
+          },
+          {
+            "label": "Z Performance Experience",
+            "href": "https://en.znismo.nissan-dubai.com/"
+          },
+          {
+            "label": "Patrol NISMO Experience",
+            "href": "https://en.patrolnismo.nissan-dubai.com/"
+          }
+        ],
+        "image": "portfolio/nissan_campaign_composition.jpg",
+        "bg": "#d4926b",
+        "accent": "#1f1208"
+      },
+      {
+        "num": "03",
+        "title": "Automotive E-Commerce Platform",
+        "description": "Full-featured e-commerce system for automotive parts with browsing, search, cart, and checkout flows.",
+        "link": "https://parts-ecom.alt-test-server.com/",
+        "image": "portfolio/nissan_showcase_composition.jpg",
+        "bg": "#f0ebe0",
+        "accent": "#060606"
+      },
+      {
+        "num": "04",
+        "title": "Creative Studio Website",
+        "description": "High-end agency website featuring immersive animations and 3D visual storytelling to showcase brand identity.",
+        "link": "https://www.alternative.agency/",
+        "image": "portfolio/alternative_agency_composition.jpg",
+        "bg": "#5fbce5",
+        "accent": "#08192d"
+      },
+      {
+        "num": "05",
+        "title": "SaaS Accounting Platform",
+        "description": "Arabic-first SaaS platform marketing site designed for clarity, conversion, and business communication.",
+        "link": "https://fatoorah.ai/",
+        "image": "portfolio/fatoorah_composition.jpg",
+        "bg": "#3dffa0",
+        "accent": "#091a12"
+      },
+      {
+        "num": "06",
+        "title": "Certified Pre-Owned Listings Platform",
+        "description": "Vehicle listing platform for certified pre-owned cars with filtering, browsing, and streamlined user experience.",
+        "link": "https://du-front.nissanusedcars.me/",
+        "image": "portfolio/nissan_usedcars_composition.jpg",
+        "bg": "#f0ebe0",
+        "accent": "#060606"
+      },
+      {
+        "num": "07",
+        "title": "Interactive Showroom Experience",
+        "description": "Tablet-based showroom experience with gamified engagement designed for immersive visitor interaction.",
+        "link": "https://table.nissan-web-apps.com/",
+        "image": "portfolio/nissan_ramadan_table_composition.jpg",
+        "bg": "#c19968",
+        "accent": "#231708"
+      },
+      {
+        "num": "08",
+        "title": "Marketing Landing Page",
+        "description": "Premium landing page with advanced scroll animations and modern interactive design system.",
+        "link": "https://mbrmarketing.me/",
+        "image": "portfolio/mbr_marketing_composition.jpg",
+        "bg": "#ff5b2e",
+        "accent": "#1a0a02"
+      }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(npm install *)",
+      "PowerShell(npm install *)",
+      "Bash(npx --no-install tsc --noEmit)"
+    ]
+  }
+}
