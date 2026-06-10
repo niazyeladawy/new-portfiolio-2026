@@ -147,7 +147,7 @@
         "num": "01",
         "title": "3D Vehicle Configurator — Magnite",
         "description": "Real-time 3D car configurator built with Three.js And Babylon.js. Users customize colors, accessories, and environments — with AR viewing — entirely in the browser, no plugin required.",
-        "link": "https://nsa.magniteconfigurator.com/",
+        "link": "https://configure.nissan.co.za",
         "image": "portfolio/magnite_portfolio_case_study.png",
         "bg": "#c44a1f",
         "accent": "#1a0a02"
@@ -164,7 +164,7 @@
           },
           {
             "label": "Patrol Experience",
-            "href": "https://en.allnewpatrol-staging.nissan-dubai.com/"
+            "href": "https://en.allnewpatrol.nissan-dubai.com/"
           },
           {
             "label": "Z Performance Experience",
@@ -183,7 +183,7 @@
         "num": "03",
         "title": "Automotive E-Commerce Platform",
         "description": "Full-featured e-commerce system for automotive parts — search, filtering, cart, and checkout — built for performance and cross-browser reliability.",
-        "link": "https://parts-ecom.alt-test-server.com/",
+        "link": "https://parts.nissanghana.com/",
         "image": "portfolio/nissan_showcase_composition.jpg",
         "bg": "#f0ebe0",
         "accent": "#060606"
@@ -210,22 +210,13 @@
         "num": "06",
         "title": "Certified Pre-Owned Listings Platform",
         "description": "Vehicle listing platform for Nissan's certified pre-owned inventory — streamlined browsing, smart filtering, and a UX built around purchase confidence.",
-        "link": "https://du-front.nissanusedcars.me/",
+        "link": "https://en.nissan-dubai.com/nissan-certified/buy-a-car.html",
         "image": "portfolio/nissan_usedcars_composition.jpg",
         "bg": "#f0ebe0",
         "accent": "#060606"
       },
       {
         "num": "07",
-        "title": "Interactive Showroom Experience",
-        "description": "Tablet-based showroom experience with gamified engagement mechanics — built to extend visitor dwell time and deepen brand interaction on the floor.",
-        "link": "https://table.nissan-web-apps.com/",
-        "image": "portfolio/nissan_ramadan_table_composition.jpg",
-        "bg": "#c19968",
-        "accent": "#231708"
-      },
-      {
-        "num": "08",
         "title": "Marketing Landing Page — MBR",
         "description": "Premium landing page with layered scroll animations and a confident visual identity. Built to convert, designed to make an impression.",
         "link": "https://mbrmarketing.me/",
