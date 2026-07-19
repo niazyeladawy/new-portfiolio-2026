@@ -147,7 +147,7 @@
         "num": "01",
         "title": "3D Vehicle Configurator — Magnite",
         "description": "Real-time 3D car configurator built with Three.js And Babylon.js. Users customize colors, accessories, and environments — with AR viewing — entirely in the browser, no plugin required.",
-        "link": "https://configure.nissan.co.za",
+        "link": "https://eg.magniteconfigurator.com/eg/en/configure/magnite-1-0t-visia-cvt/viewer?ext=RCA",
         "image": "portfolio/magnite_portfolio_case_study.png",
         "bg": "#c44a1f",
         "accent": "#1a0a02"
@@ -158,6 +158,10 @@
         "description": "Series of high-impact campaign microsites deployed across GCC markets — cinematic scroll animations, multilingual support, and market-specific performance tuning.",
         "link": "",
         "links": [
+          {
+            "label": "Pathfinder Experience",
+            "href": "https://en-pathfinder-vlp.nsa-prod-server.com/"
+          },
           {
             "label": "Magnite Experience",
             "href": "https://en.allnewmagnite.nissan-saudiarabia.com/"
