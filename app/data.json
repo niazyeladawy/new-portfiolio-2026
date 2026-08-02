@@ -10,8 +10,6 @@
       "Frontend Developer",
       "UI Systems Engineer",
       "3D Web Developer"
-      
-      
     ],
     "cta": "View Work",
     "ctaHref": "#projects",
@@ -28,10 +26,10 @@
         "value": "35+",
         "label": "Apps shipped"
       },
-     {
-  "value": "95+",
-  "label": "Lighthouse scores"
-}
+      {
+        "value": "95+",
+        "label": "Lighthouse scores"
+      }
     ],
     "tags": [
       "React.js",
@@ -148,9 +146,11 @@
         "title": "3D Vehicle Configurator — Magnite",
         "description": "Real-time 3D car configurator built with Three.js And Babylon.js. Users customize colors, accessories, and environments — with AR viewing — entirely in the browser, no plugin required.",
         "link": "https://en-eg.magniteconfigurator.com/eg/en/configure/magnite-1-0t-tekna-plus-cvt/viewer?ext=RCA",
-        "image": "portfolio/magnite_portfolio_case_study.png",
+        "image": "portfolio/magnite_3d_configurator.png",
         "bg": "#c44a1f",
-        "accent": "#1a0a02"
+        "accent": "#1a0a02",
+        "short": "Magnite",
+        "category": "3D / WebGL"
       },
       {
         "num": "02",
@@ -179,54 +179,66 @@
             "href": "https://en.patrolnismo.nissan-dubai.com/"
           }
         ],
-        "image": "portfolio/nissan_campaign_composition.jpg",
+        "image": "portfolio/nissan_campaign_microsites.png",
         "bg": "#d4926b",
-        "accent": "#1f1208"
+        "accent": "#1f1208",
+        "short": "Campaigns",
+        "category": "Microsites"
       },
       {
         "num": "03",
         "title": "Automotive E-Commerce Platform",
         "description": "Full-featured e-commerce system for automotive parts — search, filtering, cart, and checkout — built for performance and cross-browser reliability.",
         "link": "https://parts.nissanghana.com/",
-        "image": "portfolio/nissan_showcase_composition.jpg",
+        "image": "portfolio/nissan_parts_ecommerce.png",
         "bg": "#f0ebe0",
-        "accent": "#060606"
+        "accent": "#060606",
+        "short": "Parts",
+        "category": "E-Commerce"
       },
       {
         "num": "04",
         "title": "Creative Studio Website",
         "description": "Agency website for Alternative built around 3D visual storytelling and immersive motion. Every section designed to hold attention and communicate craft.",
         "link": "https://www.alternative.agency/",
-        "image": "portfolio/alternative_agency_composition.jpg",
+        "image": "portfolio/alternative_agency.png",
         "bg": "#5fbce5",
-        "accent": "#08192d"
+        "accent": "#08192d",
+        "short": "Alternative",
+        "category": "Creative Studio"
       },
       {
         "num": "05",
         "title": "SaaS Accounting Platform — Fatoorah",
         "description": "Arabic-first marketing site for a multi-tenant SaaS invoicing platform. Focused on clarity, conversion, and building trust with regional business audiences.",
         "link": "https://fatoorah.ai/",
-        "image": "portfolio/fatoorah_composition.jpg",
-        "bg": "#3dffa0",
-        "accent": "#091a12"
+        "image": "portfolio/fatoorah_saas.png",
+        "bg": "#2f8c81",
+        "accent": "#06201d",
+        "short": "Fatoorah",
+        "category": "SaaS Product"
       },
       {
         "num": "06",
         "title": "Certified Pre-Owned Listings Platform",
         "description": "Vehicle listing platform for Nissan's certified pre-owned inventory — streamlined browsing, smart filtering, and a UX built around purchase confidence.",
         "link": "https://en.nissan-dubai.com/nissan-certified/buy-a-car.html",
-        "image": "portfolio/nissan_usedcars_composition.jpg",
+        "image": "portfolio/nissan_certified_preowned.png",
         "bg": "#f0ebe0",
-        "accent": "#060606"
+        "accent": "#060606",
+        "short": "Certified",
+        "category": "Listings Platform"
       },
       {
         "num": "07",
         "title": "Marketing Landing Page — MBR",
         "description": "Premium landing page with layered scroll animations and a confident visual identity. Built to convert, designed to make an impression.",
         "link": "https://mbrmarketing.me/",
-        "image": "portfolio/mbr_marketing_composition.jpg",
+        "image": "portfolio/mbr_marketing.png",
         "bg": "#ff5b2e",
-        "accent": "#1a0a02"
+        "accent": "#1a0a02",
+        "short": "MBR",
+        "category": "Landing Page"
       }
     ]
   },
@@ -249,5 +261,12 @@
     "blink": [
       "Built responsive, accessible UI components in HTML, CSS, JavaScript, and React — working directly with designers and backend engineers to hit pixel-perfect results."
     ]
+  },
+  "projects3d": {
+    "sectionLabel": "Selected work",
+    "headline": "PROJECTS",
+    "viewLabel": "VIEW",
+    "categoryLabel": "Category",
+    "hint": "Scroll or drag to rotate"
   }
 }

@@ -1413,3 +1413,456 @@ footer {
     font-size: clamp(2.8rem, 9vw, 5rem);
   }
 }
+
+/* ============================================================
+   PROJECTS 3D — curved-drum WebGL carousel (experimental)
+   Lives alongside .sc-* stack cards; neither replaces the other.
+   ============================================================ */
+/*
+  Full-bleed canvas with the chrome floating over it — the drum needs the
+  whole section height, otherwise a stacked layout squeezes it flat.
+*/
+/*
+  The track is the scroll distance; the section sticks to the top of the
+  viewport for its whole length. Height must match the viewport exactly —
+  anything taller pushes the section's own footer below the fold.
+*/
+.p3d-track {
+  position: relative;
+}
+
+.p3d-section {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+  background: var(--black);
+  isolation: isolate;
+}
+
+.p3d-section::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -30%;
+  width: 120vmax;
+  height: 90vmax;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    closest-side,
+    rgba(61, 255, 160, 0.07),
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.p3d-head {
+  position: absolute;
+  top: 2rem;
+  left: clamp(1.5rem, 4vw, 4rem);
+  right: clamp(1.5rem, 4vw, 4rem);
+  z-index: 3;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(245, 241, 232, 0.5);
+}
+
+.p3d-hint {
+  color: rgba(245, 241, 232, 0.32);
+}
+
+.p3d-word {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -58%);
+  margin: 0;
+  z-index: 0;
+  font-size: clamp(5rem, 19vw, 17rem);
+  font-weight: 900;
+  line-height: 0.82;
+  letter-spacing: -0.045em;
+  white-space: nowrap;
+  color: rgba(245, 241, 232, 0.14);
+  pointer-events: none;
+  user-select: none;
+}
+
+.p3d-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  outline: none;
+  touch-action: pan-y;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  cursor: url("/images/cursor-pointer-70.svg") 8 4, grab;
+}
+
+.p3d-stage.is-ready {
+  opacity: 1;
+}
+
+.p3d-stage.is-dragging {
+  cursor: grabbing;
+}
+
+.p3d-stage:focus-visible {
+  outline: 1px solid rgba(61, 255, 160, 0.5);
+  outline-offset: 4px;
+}
+
+.p3d-canvas-host,
+.p3d-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.p3d-view {
+  position: absolute;
+  top: 56%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  padding: 0.7rem 1.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 241, 232, 0.35);
+  background: rgba(6, 6, 6, 0.35);
+  backdrop-filter: blur(6px);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  color: var(--white);
+  text-decoration: none;
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.p3d-view:hover {
+  background: var(--mint);
+  border-color: var(--mint);
+  color: var(--forest);
+}
+
+.p3d-bar {
+  position: absolute;
+  bottom: 4.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+}
+
+/*
+  Fixed width on purpose: category names vary a lot in length, and a pill
+  that resizes under the drum reads as a glitch. Everything that changes
+  rides a track inside it instead.
+*/
+.p3d-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 366px;
+  padding: 0.5rem 1.2rem 0.5rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 241, 232, 0.12);
+  background: rgba(245, 241, 232, 0.05);
+  backdrop-filter: blur(10px);
+}
+
+.p3d-roll {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  flex: none;
+}
+
+/*
+  Slides stack on top of each other and are placed individually by the render
+  loop, each at its own ring distance from centre. That is what lets a fixed
+  set of cards cover an ever-climbing position, and it means no transition
+  here — the loop drives them in step with the drum.
+*/
+.p3d-roll-slide {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.p3d-roll-thumb {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+}
+
+.p3d-roll-value {
+  flex: 1 1 auto;
+  height: 1.3rem;
+}
+
+/*
+  Width covers the 0.9rem padding as well (box-sizing is border-box), plus
+  slack around the text. Sized tight to the digits, a sub-pixel track offset
+  leaves a sliver of the neighbouring counter showing at the edge.
+*/
+.p3d-roll-count {
+  height: 1rem;
+  width: 92px;
+  padding-left: 0.9rem;
+  margin-left: 0.2rem;
+  border-left: 1px solid rgba(245, 241, 232, 0.14);
+}
+
+.p3d-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.p3d-meta {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.p3d-meta-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(245, 241, 232, 0.42);
+}
+
+.p3d-meta-value {
+  display: block;
+  font-size: 0.92rem;
+  line-height: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--white);
+}
+
+/*
+  Centred in the slot rather than run up against the divider: the last
+  letter-spaced gap sits after the final digit, so a left-aligned counter
+  reads as sitting off to the left of the space it occupies.
+*/
+.p3d-count {
+  display: block;
+  text-align: center;
+  text-indent: 0.12em; /* claw back the trailing letter-space */
+  font-size: 0.72rem;
+  line-height: 1rem;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+  color: rgba(245, 241, 232, 0.5);
+  font-variant-numeric: tabular-nums;
+}
+
+.p3d-nav {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/*
+  Both directions loop, so neither is the primary one — they share the pill's
+  glass treatment rather than one being a solid call to action.
+*/
+.p3d-round {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1px solid rgba(245, 241, 232, 0.14);
+  background: rgba(245, 241, 232, 0.05);
+  backdrop-filter: blur(10px);
+  color: var(--white);
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.p3d-round:hover {
+  background: rgba(61, 255, 160, 0.14);
+  border-color: rgba(61, 255, 160, 0.4);
+  color: var(--mint);
+}
+
+.p3d-title {
+  position: absolute;
+  bottom: 1.6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  max-width: min(90vw, 640px);
+  font-size: 0.85rem;
+  color: rgba(245, 241, 232, 0.62);
+  text-align: center;
+}
+
+.p3d-title-num {
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  color: var(--mint);
+}
+
+.p3d-title a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.3s ease, border-color 0.3s ease;
+}
+
+.p3d-title a:hover {
+  color: var(--white);
+  border-color: rgba(245, 241, 232, 0.4);
+}
+
+@media (max-width: 900px) {
+  .p3d-head {
+    top: 1.5rem;
+  }
+  .p3d-hint {
+    display: none;
+  }
+  /*
+    Sits higher than on desktop because the title below it wraps to two lines
+    at this width — measured from the bar, not the title, so the gap survives
+    whichever of the two a given project needs.
+  */
+  .p3d-bar {
+    bottom: 5.2rem;
+    gap: 0.6rem;
+  }
+  .p3d-pill {
+    width: min(260px, calc(100vw - 9rem));
+  }
+  .p3d-roll-count {
+    display: none;
+  }
+  .p3d-round {
+    width: 46px;
+    height: 46px;
+  }
+  .p3d-title {
+    font-size: 0.78rem;
+  }
+}
+
+/*
+  Phone: the footer stops being a centred cluster of fixed-width parts and
+  becomes one full-width row — the arrows keep their size and the pill takes
+  whatever is left, so the margins stay even at every width instead of the
+  cluster growing until it runs off the screen. Offsets are measured from the
+  safe area so nothing lands under the home indicator.
+*/
+@media (max-width: 600px) {
+  .p3d-bar {
+    left: 0;
+    right: 0;
+    transform: none;
+    /*
+      Lower than the ≤900 offset on purpose: the title below is a single line
+      here, so this lands on the same ~1.3rem gap above it.
+    */
+    bottom: calc(3.5rem + env(safe-area-inset-bottom));
+    gap: 0.5rem;
+    padding: 0 1rem;
+  }
+  .p3d-pill {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+    gap: 0.6rem;
+    padding: 0.4rem 1rem 0.4rem 0.4rem;
+  }
+  .p3d-nav {
+    flex: none;
+    gap: 0.4rem;
+  }
+  .p3d-roll-thumb {
+    width: 40px;
+    height: 40px;
+  }
+  .p3d-meta-label {
+    font-size: 0.55rem;
+    letter-spacing: 0.16em;
+  }
+  .p3d-meta-value {
+    font-size: 0.82rem;
+  }
+  /* 44px is the smallest comfortable touch target */
+  .p3d-round {
+    width: 44px;
+    height: 44px;
+  }
+  /*
+    One line, clipped. Wrapped, a long title climbs into the pill above it and
+    runs wide enough to sit under the fixed badge in the corner; the arrow
+    glyph goes with it, since the whole line is the link anyway.
+  */
+  .p3d-title {
+    bottom: calc(1.1rem + env(safe-area-inset-bottom));
+    max-width: calc(100vw - 7.5rem);
+    gap: 0.5rem;
+    font-size: 0.72rem;
+  }
+  .p3d-title a,
+  .p3d-title > span:last-child {
+    display: block;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .p3d-title-num {
+    flex: none;
+    font-size: 0.64rem;
+  }
+  .p3d-title a svg {
+    display: none;
+  }
+}
+
+/*
+  Touch has no hover to preview a control with, so the arrows answer the tap
+  itself — without this they look inert for the length of the press.
+*/
+@media (hover: none) {
+  .p3d-round:active {
+    background: rgba(61, 255, 160, 0.14);
+    border-color: rgba(61, 255, 160, 0.4);
+    color: var(--mint);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .p3d-stage {
+    transition: none;
+  }
+}
+
+
+
+
