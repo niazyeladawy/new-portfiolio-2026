@@ -999,7 +999,12 @@ nav.hidden {
 }
 
 /* STACK CARDS */
-#projects {
+/*
+  Scoped to the stack-cards root rather than #projects: both that section and
+  the 3D carousel answer to that id (whichever one page.tsx has switched on),
+  and as an id selector this used to win over the carousel's own height.
+*/
+.sc-section {
   height: 100vh;
   position: relative;
   background: var(--black);
@@ -1429,6 +1434,19 @@ footer {
 */
 .p3d-track {
   position: relative;
+  /*
+    Scroll a single project is worth while the section is pinned, in svh.
+    The component supplies --p3d-spin (projects to turn, plus the hold on the
+    last one) and measures whatever height that adds up to, so the pacing of
+    the whole carousel is set here and nowhere else.
+  */
+  --p3d-per-project: 60;
+  /*
+    Projects' worth of scroll spent holding on the first one before the drum
+    starts to turn. Zero here: a wheel arrives at the section already moving,
+    so an opening pause reads as the page having stuck.
+  */
+  --p3d-start-hold: 0;
 }
 
 .p3d-section {
@@ -1696,10 +1714,16 @@ footer {
   transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
-.p3d-round:hover {
+.p3d-round:hover:not(:disabled) {
   background: rgba(61, 255, 160, 0.14);
   border-color: rgba(61, 255, 160, 0.4);
   color: var(--mint);
+}
+
+/* the ends of the run — dimmed rather than hidden, so the row keeps its shape */
+.p3d-round:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .p3d-title {
@@ -1740,6 +1764,20 @@ footer {
 }
 
 @media (max-width: 900px) {
+  /*
+    A phone scrolls in shorter strokes than a wheel does, and 60svh a project
+    turns seven of them into most of a page of thumbing. Two thirds of that
+    keeps each project readable without the section overstaying.
+  */
+  .p3d-track {
+    --p3d-per-project: 40;
+    /*
+      One project's worth of lead-in: a thumb flick lands in the section with
+      the drum already turning, so the opening project is gone before it has
+      been looked at. Holding it for the first swipe gives it a moment.
+    */
+    --p3d-start-hold: 1;
+  }
   .p3d-head {
     top: 1.5rem;
   }
@@ -1778,6 +1816,10 @@ footer {
   safe area so nothing lands under the home indicator.
 */
 @media (max-width: 600px) {
+  /* shorter again on a phone, where a swipe covers less of the page */
+  .p3d-track {
+    --p3d-per-project: 30;
+  }
   .p3d-bar {
     left: 0;
     right: 0;
@@ -1850,7 +1892,7 @@ footer {
   itself — without this they look inert for the length of the press.
 */
 @media (hover: none) {
-  .p3d-round:active {
+  .p3d-round:active:not(:disabled) {
     background: rgba(61, 255, 160, 0.14);
     border-color: rgba(61, 255, 160, 0.4);
     color: var(--mint);

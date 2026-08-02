@@ -1,6 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
 import * as THREE from 'three';
 import { ArrowLeft, ArrowRight, ArrowUpRight } from 'lucide-react';
 import data from '../data.json';
@@ -28,8 +34,11 @@ const PANEL_Y = 0.5;
 const LIFT = 0.26; // camera sits below the drum centre, so reflections get room
 const FILL = 0.8; // slice of each angular step covered by an image
 const FOV = 45;
-const DRAG_PX_PER_ITEM = 300;
-const SCROLL_PER_ITEM = 60; // % of viewport height of pinned scroll per project
+const DRAG_PX_PER_ITEM = 300; // pointer travel that turns one project…
+const DRAG_SWIPE_SHARE = 0.3; // …or this much of a narrow screen, if that is less
+const TOUCH_INTENT_PX = 8; // travel before a touch is read as across or down
+/* how much scroll a project is worth lives in CSS, as --p3d-per-project */
+const END_HOLD = 0.8; // projects' worth of scroll spent parked on the last one
 const SNAP_IDLE_MS = 160; // quiet time before the drum settles on a project
 const HOVER_SCALE = 0.05; // how much the facing panel swells under the pointer
 const MIRROR_GAP = 0.2; // world units of clear floor between a panel and its reflection
@@ -384,10 +393,24 @@ const ProjectsCarousel3D = () => {
     });
 
     /* ── camera framing ─────────────────────────────────────────── */
+    /*
+      Declared up here because `resize` reads it and runs immediately below —
+      a `let` further down the effect would still be in its dead zone.
+    */
+    let startHold = 0; // projects' worth of scroll before the drum begins
     const resize = () => {
       const w = stage.clientWidth;
       const h = stage.clientHeight;
       if (!w || !h) return;
+
+      /*
+        Read here rather than per frame: it only changes with the breakpoint,
+        and a breakpoint change is a resize.
+      */
+      startHold =
+        parseFloat(
+          getComputedStyle(track).getPropertyValue('--p3d-start-hold')
+        ) || 0;
 
       const aspect = w / h;
       const tanHalfFov = Math.tan((FOV * Math.PI) / 360);
@@ -444,15 +467,16 @@ const ProjectsCarousel3D = () => {
     */
     const span = count - 1;
     /*
-      Two inputs sum into one position:
+      Every input lands on the page's scroll position:
 
-        pos = scrollIdx (0→span, from the page) + offset (unbounded)
+        pos = scrollIdx (0→span, from the page) + offset
 
-      Scroll stays finite so running off the end of the section releases the
-      pin and carries on to whatever follows. Everything else — buttons,
-      keys, drag, horizontal wheel — moves `offset` instead, which has no
-      bounds at all. The drum is a ring, so it happily spins through it
-      forever, and the page is never scrolled programmatically.
+      `offset` is not an input of its own — it only carries the fraction the
+      idle snap takes out to centre a project, so it never leaves ±0.5. Drag,
+      buttons, keys and horizontal wheel all scroll the page instead, which
+      keeps the drum and the scrollbar telling the same story and bounds the
+      carousel at both ends: the first project is the first, the last is the
+      last, and neither wraps around.
     */
     let offset = 0;
     let lastInputAt = 0;
@@ -467,19 +491,72 @@ const ProjectsCarousel3D = () => {
       window.scrollY + track.getBoundingClientRect().top;
 
     /*
-      Step to the nearest copy of `index` on the ring, measured from where we
-      are already heading so rapid clicks accumulate instead of cancelling.
+      The pinned travel is split three ways: a lead-in on the first project,
+      one project's worth per turn, and the END_HOLD tail on the last one.
+      The lead-in is read from the stylesheet, so a phone can hold the opening
+      project for a scroll while a desktop starts turning at once.
     */
-    goToRef.current = (index) => {
-      offset += ringDelta(index, Math.round(target), count);
+    const unit = () => travel() / (span + END_HOLD + startHold);
+    const lead = () => unit() * startHold;
+    const spinRange = () => unit() * span;
+    const pxPerItem = () => unit();
+
+    /* Page position that brings a given fractional project index to front. */
+    const scrollForIndex = (index: number) =>
+      trackTop() + lead() + THREE.MathUtils.clamp(index, 0, span) * unit();
+
+    /* Scroll so that `index` faces the camera, clamped to the real ends. */
+    const scrollToIndex = (index: number, smooth: boolean) => {
+      /*
+        The snap fraction is folded away rather than left to correct itself:
+        an explicit index has to land on that exact project, not a rounding
+        of it, and the page position is the truth from here on.
+      */
+      offset = 0;
+      /*
+        'instant' rather than 'auto' throughout: the page sets
+        `scroll-behavior: smooth` globally, and 'auto' would inherit it —
+        turning every frame of a drag into its own easing animation.
+      */
+      window.scrollTo({
+        top: scrollForIndex(index),
+        behavior: smooth ? 'smooth' : 'instant',
+      });
+      lastInputAt = performance.now();
       dirty = true;
     };
+
+    /* Move the page by a distance measured in projects, ends included. */
+    const scrollByItems = (items: number) => {
+      const top = THREE.MathUtils.clamp(
+        window.scrollY + items * pxPerItem(),
+        scrollForIndex(0),
+        scrollForIndex(span)
+      );
+      window.scrollTo({ top, behavior: 'instant' });
+      lastInputAt = performance.now();
+      dirty = true;
+    };
+
+    /*
+      What a project costs in pointer travel. A thumb crosses a phone in far
+      less than a mouse crosses a desktop, so the cost is capped at a share of
+      the screen — under a third of the width on a phone, the full
+      DRAG_PX_PER_ITEM as soon as the window is wide enough to afford it.
+    */
+    const dragPerItem = () =>
+      Math.min(DRAG_PX_PER_ITEM, window.innerWidth * DRAG_SWIPE_SHARE);
+
+    goToRef.current = (index) => scrollToIndex(index, true);
 
     /* ── pointer drag ───────────────────────────────────────────── */
     let dragging = false;
     let pointerId = -1;
     let startX = 0;
-    let startOffset = 0;
+    let downX = 0;
+    let downY = 0;
+    let steering = false; // the gesture has taken the carousel over
+    let startScroll = 0;
     let moved = 0;
     let lastX = 0;
     let lastT = 0;
@@ -492,13 +569,31 @@ const ProjectsCarousel3D = () => {
     const onDown = (e: PointerEvent) => {
       dragging = true;
       pointerId = e.pointerId;
-      startX = lastX = e.clientX;
-      startOffset = offset;
+      startX = lastX = downX = e.clientX;
+      downY = e.clientY;
+      startScroll = window.scrollY;
       moved = 0;
       velocity = 0;
+      /*
+        A finger has to prove it means to turn the drum; a mouse never does.
+        A vertical swipe still delivers pointermove before the browser claims
+        the gesture, and those moves are sideways by a pixel or two — enough
+        for a drag that scrolls the page to drag it straight back to where the
+        touch landed. That is what pins the reader inside the section: every
+        attempt to swipe out lands back on the carousel.
+      */
+      steering = e.pointerType !== 'touch';
       lastT = performance.now();
       el.setPointerCapture(pointerId);
       stage.classList.add('is-dragging');
+    };
+
+    /* Hand the gesture back to the page and stop steering the carousel. */
+    const yieldToPage = () => {
+      dragging = false;
+      steering = false;
+      stage.classList.remove('is-dragging');
+      if (el.hasPointerCapture(pointerId)) el.releasePointerCapture(pointerId);
     };
 
     const onMove = (e: PointerEvent) => {
@@ -506,15 +601,40 @@ const ProjectsCarousel3D = () => {
       hovered = !dragging && pickIndex(e) === facingIndex();
 
       if (!dragging || e.pointerId !== pointerId) return;
+      const fromDownX = e.clientX - downX;
+      const fromDownY = e.clientY - downY;
+      moved = Math.max(moved, Math.abs(fromDownX), Math.abs(fromDownY));
+
+      if (!steering) {
+        // still undecided — too small a movement to read either way
+        if (moved < TOUCH_INTENT_PX) return;
+        // more down the screen than across it: the page owns this gesture
+        if (Math.abs(fromDownY) >= Math.abs(fromDownX)) return yieldToPage();
+        // taking over from here, so measure from here — no jump at the switch
+        steering = true;
+        startX = lastX = e.clientX;
+        startScroll = window.scrollY;
+      }
+
       const dx = e.clientX - startX;
-      moved = Math.max(moved, Math.abs(dx));
-      // drag spins the ring, never the page, so it can keep going forever
-      offset = startOffset - dx / DRAG_PX_PER_ITEM;
+      /*
+        Dragging scrolls the page rather than spinning the drum on its own,
+        so the scrollbar follows the hand — and the clamp is what stops the
+        drag at the first and last project instead of looping past them.
+      */
+      window.scrollTo({
+        top: THREE.MathUtils.clamp(
+          startScroll - (dx / dragPerItem()) * pxPerItem(),
+          scrollForIndex(0),
+          scrollForIndex(span)
+        ),
+        behavior: 'instant',
+      });
 
       const now = performance.now();
       const dt = now - lastT;
       if (dt > 0) {
-        velocity = -(e.clientX - lastX) / DRAG_PX_PER_ITEM / (dt / 1000);
+        velocity = -(e.clientX - lastX) / dragPerItem() / (dt / 1000);
         lastT = now;
         lastX = e.clientX;
       }
@@ -524,15 +644,20 @@ const ProjectsCarousel3D = () => {
 
     const endDrag = (e: PointerEvent) => {
       if (!dragging || e.pointerId !== pointerId) return;
-      dragging = false;
-      stage.classList.remove('is-dragging');
-      if (el.hasPointerCapture(pointerId)) el.releasePointerCapture(pointerId);
+      const wasSteering = steering;
+      yieldToPage();
       if (moved < 6) return; // a tap — onClick deals with it
+      // a swipe the page took, or one that never picked a direction
+      if (!wasSteering) return;
 
-      // carry the flick, then let the idle snap settle on an item
-      offset += THREE.MathUtils.clamp(velocity * 0.22, -1.2, 1.2);
-      lastInputAt = performance.now();
-      dirty = true;
+      /*
+        The flick chooses which project to land on rather than adding free
+        spin: thrown hard it carries to the next one or two, released gently
+        it settles on whichever is already nearest. Measured off `pos`, so it
+        lands on the panel you are actually looking at.
+      */
+      const flick = THREE.MathUtils.clamp(velocity * 0.22, -1.2, 1.2);
+      scrollToIndex(Math.round(pos + flick), true);
     };
 
     const raycaster = new THREE.Raycaster();
@@ -575,16 +700,14 @@ const ProjectsCarousel3D = () => {
       */
       if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
       e.preventDefault();
-      offset += e.deltaX / 260;
-      lastInputAt = performance.now();
-      dirty = true;
+      scrollByItems(e.deltaX / 260);
     };
 
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight') offset += 1;
-      else if (e.key === 'ArrowLeft') offset -= 1;
+      if (e.key === 'ArrowRight') scrollToIndex(Math.round(pos) + 1, true);
+      else if (e.key === 'ArrowLeft') scrollToIndex(Math.round(pos) - 1, true);
       else return;
-      dirty = true;
+      e.preventDefault();
     };
 
     const onLeave = () => {
@@ -642,24 +765,46 @@ const ProjectsCarousel3D = () => {
       }
 
       const range = travel();
-      const stuckFor = y - trackTop();
-      const scrollIdx = range > 0 ? clamp01(stuckFor / range) * span : 0;
+      /*
+        Scroll spent inside the turning stretch, so the lead-in on the first
+        project is subtracted before anything is mapped. Rotation also
+        finishes before the pin does: mapped across the whole track, the last
+        project would only arrive on the final pixel of scroll, and momentum
+        carries you out of the section before you ever see it. END_HOLD buys
+        that travel back at the end, where the drum sits still on the last
+        project until the pin releases.
+      */
+      const stuckFor = y - trackTop() - lead();
+      const spin = spinRange();
+      const scrollIdx = spin > 0 ? clamp01(stuckFor / spin) * span : 0;
       target = scrollIdx + offset;
 
-      // true only while the section is the one actually pinned to the viewport
-      const inSection = range > 0 && stuckFor > -1 && stuckFor < range + 1;
+      /*
+        The stretch that still turns the drum, bounded at both ends. Outside
+        it the reader is on their way out — off the bottom into the END_HOLD
+        tail, or back up off the top past the first project — and the
+        carousel stops answering the wheel entirely: no swell, no snap, no
+        rotation trailing behind the scroll while the section slides away.
+      */
+      const turning = range > 0 && stuckFor > 0 && stuckFor < spin;
 
       /*
-        Scroll velocity swells the whole drum. Gated on `inSection` so it is
-        driven by scrolling *this* section — without that, racing down the
-        page makes the drum arrive already swollen from scrolling elsewhere.
-        Attack is quick so it reacts as you pick up speed; release is far
-        slower so the swell rides on past the point the wheel stops.
+        Scroll velocity swells the whole drum. Gated on `turning` so it is
+        driven by scrolling *this* section, and only while the scrolling still
+        means something — without that, racing down the page makes the drum
+        arrive already swollen from scrolling elsewhere, and leaving swells it
+        on the way out. Attack is quick so it reacts as you pick up speed;
+        release is far slower so the swell rides on past the point the wheel
+        stops, except on the way out, where it collapses at once.
       */
-      const speedGoal = inSection
+      const speedGoal = turning
         ? clamp01(dt > 0 ? Math.abs(dy) / dt / SPEED_REF : 0)
         : 0;
-      const grip = speedGoal > speedAmt ? SPEED_ATTACK : SPEED_RELEASE;
+      const grip = !turning
+        ? SPEED_ATTACK
+        : speedGoal > speedAmt
+          ? SPEED_ATTACK
+          : SPEED_RELEASE;
       if (Math.abs(speedGoal - speedAmt) > 0.0005) {
         speedAmt += (speedGoal - speedAmt) * (1 - Math.pow(grip, dt));
         dirty = true;
@@ -677,7 +822,7 @@ const ProjectsCarousel3D = () => {
         own — the drum just rotates the last fraction into place.
       */
       if (
-        inSection &&
+        turning &&
         !dragging &&
         now - lastInputAt > SNAP_IDLE_MS &&
         Math.abs(target - Math.round(target)) > 0.01
@@ -685,6 +830,20 @@ const ProjectsCarousel3D = () => {
         offset += Math.round(target) - target;
         target = Math.round(target);
         dirty = true;
+      }
+
+      if (!turning) {
+        /*
+          On the way out the drum stops *following* the scroll — the target
+          is pinned to the project the page reached, first or last, and the
+          snap fraction is dropped with it so it sits square rather than a
+          sliver off. It still eases into that target like anywhere else:
+          cutting the ease as well would land the turn in a single frame,
+          which reads as a jump at exactly the moment the section starts to
+          slide away.
+        */
+        if (offset !== 0) offset = 0;
+        target = Math.round(scrollIdx);
       }
 
       const delta = target - pos;
@@ -810,8 +969,26 @@ const ProjectsCarousel3D = () => {
       className="p3d-track"
       /* the hero CTA targets #projects; StackCards owns the same id when on */
       id="projects"
-      /* one viewport for the section itself, plus the pinned scroll distance */
-      style={{ height: `${100 + (count - 1) * SCROLL_PER_ITEM}svh` }}
+      /*
+        The pinned scroll distance in projects: one per project to turn, plus
+        END_HOLD to sit on the last one before the pin lets go. What a project
+        is worth in scroll lives in the stylesheet, so a phone can spend less
+        of it — everything here measures the track it is given rather than
+        assuming a height.
+      */
+      style={
+        {
+          '--p3d-spin': count - 1 + END_HOLD,
+          /*
+            Set inline rather than left to the class rule: `#projects` also
+            carries a height, and as an id selector it wins over any class,
+            collapsing the whole track to one viewport. Inline beats both, and
+            still reads --p3d-per-project, so the breakpoints keep working.
+          */
+          height:
+            'calc((100 + (var(--p3d-spin) + var(--p3d-start-hold, 0)) * var(--p3d-per-project, 60)) * 1svh)',
+        } as CSSProperties
+      }
     >
     <section className="p3d-section" aria-label={COPY.sectionLabel}>
       <header className="p3d-head">
@@ -891,10 +1068,15 @@ const ProjectsCarousel3D = () => {
         </div>
 
         <div className="p3d-nav">
+          {/*
+            The ends are ends: neither button wraps around, so the first and
+            last project are reachable but the ring is not endless.
+          */}
           <button
             type="button"
             className="p3d-round"
-            onClick={() => go((active - 1 + count) % count)}
+            onClick={() => go(active - 1)}
+            disabled={active === 0}
             aria-label="Previous project"
           >
             <ArrowLeft size={18} strokeWidth={2} />
@@ -902,7 +1084,8 @@ const ProjectsCarousel3D = () => {
           <button
             type="button"
             className="p3d-round"
-            onClick={() => go((active + 1) % count)}
+            onClick={() => go(active + 1)}
+            disabled={active === count - 1}
             aria-label="Next project"
           >
             <ArrowRight size={18} strokeWidth={2} />
