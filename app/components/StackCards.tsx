@@ -3,7 +3,8 @@
 import { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ArrowRight, ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
+import Button from './Button';
 import data from '../data.json';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -15,13 +16,21 @@ type StackCard = {
   link?: string;
   links?: { label: string; href: string }[];
   image: string;
-  bg: string;
-  accent: string;
+  /* one of the system's product-card blocks: yellow | green | red */
+  tone: string;
+  short?: string;
+  category?: string;
 };
 
 const CARDS: StackCard[] = data.stackCards.items as StackCard[];
 const { sectionLabel, viewProjectLabel } = data.stackCards;
 
+/*
+  Alternative to the WebGL drum: full-height colour blocks that lean back and
+  fade as the next one slides up underneath. Each card is one of the system's
+  product-card blocks — the tone comes from data, the colour itself from the
+  stylesheet, so nothing here authors a palette value.
+*/
 const StackCards = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -131,120 +140,83 @@ const StackCards = () => {
 
   return (
     <div data-nosnippet>
-    <section ref={sectionRef} id="projects" className="sc-section">
-      {/* perspective lives on this wrapper so rotateX feels 3D */}
-      <div className="sc-wrap">
-        {CARDS.map((card, i) => (
-          <div
-            key={card.num}
-            ref={(el) => {
-              cardRefs.current[i] = el;
-            }}
-            className="sc-card"
-            style={{
-              background: card.bg,
-              zIndex: i,
-            }}
-          >
-            <div className="sc-card-body">
-              <header className="sc-card-head">
-                <div className="sc-card-label">
-                  <span
-                    className="sc-card-num"
-                    style={{ color: card.accent }}
-                  >
-                    {card.num}
-                  </span>
-
-                  <span
-                    className="sc-card-rule"
-                    style={{ background: card.accent }}
-                  />
-
-                  <span className="sc-card-section"  style={{ color: card.accent }}>
-                    {sectionLabel}
-                  </span>
-                </div>
-              </header>
-
-              <div className="sc-card-content">
-                <h2 className="sc-card-title" style={{ color: card.accent }}>{card.title}</h2>
-                <img
-                  className="sc-card-img-inline"
-                  src={`/${card.image}`}
-                  alt=""
-                  aria-hidden="true"
-                  onError={(e) => {
-                    e.currentTarget.style.visibility = 'hidden';
-                  }}
-                />
-              </div>
-
-              <div className="sc-card-foot">
-                <p
-                  className="sc-card-desc"
-                  style={{ color: card.accent }}
-                >
-                  {card.description}
-                </p>
-
-                {card.link ? (
-                  <a
-                    className="sc-card-cta"
-                    href={card.link}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ color: card.accent }}
-                  >
-                    <span className="sc-card-cta-text">{viewProjectLabel}</span>
-                    <span
-                      className="sc-card-cta-icon"
-                      aria-hidden="true"
-                      style={{ background: card.accent }}
-                    >
-                      <ArrowRight size={16} strokeWidth={2.5} />
-                    </span>
-                  </a>
-                ) : null}
-
-                {card.links?.length ? (
-                  <ul className="sc-card-sublinks">
-                    {card.links.map((l) => (
-                      <li key={l.href}>
-                        <a
-                          href={l.href}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{ color: card.accent }}
-                        >
-                          {l.label}
-                          <ArrowUpRight size={14} strokeWidth={2.5} aria-hidden="true" />
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-            </div>
-
-            <img
-              className="sc-card-img"
-              src={`/${card.image}`}
-              alt=""
-              aria-hidden="true"
-              onError={(e) => {
-                e.currentTarget.style.visibility = 'hidden';
+      <section ref={sectionRef} id="projects" className="sc-section">
+        {/* perspective lives on this wrapper so rotateX feels 3D */}
+        <div className="sc-wrap">
+          {CARDS.map((card, i) => (
+            <div
+              key={card.num}
+              ref={(el) => {
+                cardRefs.current[i] = el;
               }}
-            />
+              className={`sc-card sc-card--${card.tone}`}
+              style={{ zIndex: i }}
+            >
+              <div className="sc-card-body">
+                <header className="sc-card-head">
+                  <div className="sc-card-label">
+                    <span className="sc-card-num">{card.num}</span>
+                    <span className="sc-card-rule" aria-hidden="true" />
+                    <span className="sc-card-section">{sectionLabel}</span>
+                  </div>
+                </header>
 
-            {/* decorative ghosted number */}
-            {/* <span className="sc-card-ghost" aria-hidden="true">
-              {card.num}
-            </span> */}
-          </div>
-        ))}
-      </div>
-    </section>
+                <div className="sc-card-content">
+                  <h2 className="sc-card-title">{card.title}</h2>
+                  <img
+                    className="sc-card-img-inline"
+                    src={`/${card.image}`}
+                    alt=""
+                    aria-hidden="true"
+                    onError={(e) => {
+                      e.currentTarget.style.visibility = 'hidden';
+                    }}
+                  />
+                </div>
+
+                <div className="sc-card-foot">
+                  <p className="sc-card-desc">{card.description}</p>
+
+                  {card.link ? (
+                    <Button
+                      href={card.link}
+                      variant="ink"
+                      compact
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {viewProjectLabel}
+                    </Button>
+                  ) : null}
+
+                  {card.links?.length ? (
+                    <ul className="sc-card-sublinks">
+                      {card.links.map((l) => (
+                        <li key={l.href}>
+                          <a href={l.href} target="_blank" rel="noreferrer">
+                            {l.label}
+                            <ArrowUpRight size={14} strokeWidth={2.5} aria-hidden="true" />
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              </div>
+
+              <img
+                className="sc-card-img"
+                src={`/${card.image}`}
+                alt=""
+                aria-hidden="true"
+                onError={(e) => {
+                  e.currentTarget.style.visibility = 'hidden';
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 };

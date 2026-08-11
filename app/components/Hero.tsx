@@ -1,245 +1,269 @@
-import { useEffect } from 'react';
+'use client';
+
+import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
+import Button from './Button';
+import SplitWords, { releaseMask } from './SplitWords';
 import data from '../data.json';
 
-const {
-  badge,
-  name,
-  description,
-  roles,
-  cta,
-  ctaHref,
-  scrollLabel,
-} = data.hero;
+const { badge, name, description, roles, cta, ctaHref, scrollLabel } = data.hero;
 
 interface HeroProps {
   startAnimation?: boolean;
 }
 
+/*
+  The badge and the role ticker above the name are parked, not deleted — the
+  copy, the CSS and the intro beats that bring them in are all still here.
+  Flip this back to true to put them back.
+*/
+const SHOW_TOP = false;
+
+/*
+  Lightblue full-bleed panel, ranged along the centre line. The name is set in
+  viewport units so it bleeds edge to edge at every width, and it arrives one
+  line at a time — the one big move on the page, everything else fades in
+  behind it.
+*/
 const Hero = ({ startAnimation = false }: HeroProps) => {
+  const rootRef = useRef<HTMLElement | null>(null);
+
   useEffect(() => {
     if (!startAnimation) return;
 
-    const heroName = document.querySelector(
-      '.hero-name'
-    ) as HTMLElement | null;
+    const root = rootRef.current;
+    if (!root) return;
 
-    const heroWords = document.querySelectorAll(
-      '.hero-name .wd'
-    );
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    if (!heroName || heroWords.length === 0) return;
+    const ctx = gsap.context(() => {
+      const firstLine = root.querySelector<HTMLElement>('.hero__name-first');
+      const lastLine = root.querySelector<HTMLElement>('.hero__name-last');
+      if (!firstLine || !lastLine) return;
 
-    const tl = gsap.timeline();
+      const firstWord = firstLine.querySelector('.splitted__word-wrap');
+      const lastWord = lastLine.querySelector('.splitted__word-wrap');
+      if (!firstWord || !lastWord) return;
 
-    gsap.set('.hero-badge', { opacity: 0 });
-    gsap.set('.hero-ticker', { opacity: 0 });
-    gsap.set('.hero-desc', { opacity: 0, y: 30 });
-    gsap.set('.hero-cta', { opacity: 0, y: 30 });
-    gsap.set('.scroll-ind', { opacity: 0, y: 30 });
+      /*
+        Reduced motion still needs the end state — every one of these starts
+        at opacity 0 in CSS, so skipping the timeline would leave a blank
+        panel rather than a still one. The name is not among them: its words
+        rest in the markup and SplitWords leaves them alone under reduce.
+      */
+      if (reduced) {
+        gsap.set(
+          [
+            '.hero__badge',
+            '.hero__badge-text',
+            '.hero__ticker',
+            '.hero__desc',
+            '.hero__cta',
+            '.hero__scroll',
+          ],
+          { opacity: 1, x: 0, y: 0 }
+        );
+        gsap.set('.hero__badge-line', { scaleX: 1 });
+        return;
+      }
 
-    const finalRect = heroName.getBoundingClientRect();
+      const tl = gsap.timeline();
 
-    gsap.set(heroName, {
-      position: 'absolute',
-      top: '50%',
-      left: '50%',
-      xPercent: -50,
-      yPercent: -50,
-      margin: 0,
-      opacity: 1,
-      zIndex: 10,
-    });
+      /*
+        The name arrives one line at a time. Both rise out of their own clip
+        the way every other heading on the page does; the second overlaps the
+        first by most of its travel, so it reads as one move in two beats
+        rather than two animations in a queue.
 
-    const centerRect = heroName.getBoundingClientRect();
-    const moveX = finalRect.left - centerRect.left;
-    const moveY = finalRect.top - centerRect.top;
+        SplitWords parked the words below the line already — restated so the
+        beat reads on its own.
+      */
+      gsap.set([firstWord, lastWord], { yPercent: 120 });
 
-    gsap.set('.hero-name .wd', { yPercent: 120 });
-
-    tl.to('.hero-name .wd', {
-      yPercent: 0,
-      duration: 1.1,
-      ease: 'expo.out',
-      stagger: 0.12,
-    });
-
-    tl.to(heroName, {
-      x: moveX,
-      y: moveY,
-      duration: 1.3,
-      ease: 'power4.out',
-    });
-
-    tl.add(() => {
-      gsap.set(heroName, {
-        clearProps:
-          'position,top,left,xPercent,yPercent,x,y,zIndex,margin',
+      tl.to(firstWord, {
+        yPercent: 0,
+        duration: 1.1,
+        ease: 'expo.out',
+        /* the clip is only wanted while the words travel — see globals.css */
+        onComplete: () => releaseMask(firstLine),
       });
-    });
 
-    let tickerIndex = 1;
-    let resetTimeout: number | null = null;
-    let tickerInterval: number | null = null;
-
-    tl.add(() => {
-      tickerInterval = window.setInterval(() => {
-        gsap.to('.hero-ticker-track', {
-          y: `-${tickerIndex * 1.2}em`,
-          duration: 0.6,
-          ease: 'expo.inOut',
-        });
-        tickerIndex++;
-        if (tickerIndex >= roles.length + 1) {
-          resetTimeout = window.setTimeout(() => {
-            gsap.set('.hero-ticker-track', { y: 0 });
-            tickerIndex = 1;
-          }, 650);
-        }
-      }, 2500);
-    });
-
-    tl.to({}, { duration: 0.15 });
-
-    tl.to('.hero-badge', {
-      opacity: 1,
-      duration: 0.6,
-      ease: 'power2.out',
-    })
-      .fromTo(
-        '.hero-badge-text',
-        { x: -8, opacity: 0 },
-        { x: 0, opacity: 1, duration: 0.7, ease: 'expo.out' },
-        '<'
-      )
-      .fromTo(
-        '.hero-badge-line',
-        { scaleX: 0 },
+      tl.to(
+        lastWord,
         {
-          scaleX: 1,
-          duration: 0.6,
+          yPercent: 0,
+          duration: 1.1,
           ease: 'expo.out',
-          transformOrigin: 'left center',
+          onComplete: () => releaseMask(lastLine),
         },
-        '<0.2'
-      )
-      .to(
-        '.hero-ticker',
-        { opacity: 1, duration: 0.5, ease: 'power2.out' },
-        '-=0.4'
-      )
-      .to(
-        '.hero-desc',
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: 'power3.out',
-        },
-        '-=0.2'
-      )
-      .to(
-        '.hero-cta',
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.7,
-          ease: 'power2.out',
-        },
-        '-=0.6'
-      )
-      .to(
-        '.scroll-ind',
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: 'power3.out',
-        },
-        '<0.1'
+        '-=0.7'
       );
 
-    const cta = document.querySelector(
-      '.hero-cta'
-    ) as HTMLElement | null;
-    let onMouseMove: ((e: MouseEvent) => void) | null = null;
+      /*
+        The second line also opens out as it lands: it comes in set tight and
+        relaxes to the face's own spacing. Negative, so the word arrives
+        compressed and spreads into place — 0.04em closes the gaps to almost
+        nothing, which on a face already this condensed is as tight as it goes
+        before the letters start to overlap and read as a rendering fault.
 
-    if (cta && window.innerWidth >= 900) {
-      onMouseMove = (e: MouseEvent) => {
-        const rect = cta.getBoundingClientRect();
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
-        const dx = e.clientX - cx;
-        const dy = e.clientY - cy;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const radius = 120;
-        if (dist < radius) {
-          const strength = (1 - dist / radius) * 10;
-          gsap.to(cta, {
-            x: dx * strength * 0.12,
-            y: dy * strength * 0.12,
-            duration: 0.4,
-            ease: 'power2.out',
-          });
-        } else {
-          gsap.to(cta, {
-            x: 0,
-            y: 0,
-            duration: 0.5,
-            ease: 'expo.out',
-          });
-        }
-      };
-      window.addEventListener('mousemove', onMouseMove);
-    }
+        It starts at 0.55, the midpoint of the 1.1s rise, rather than with it.
+        fromTo writes its start value at build time, so the line holds the
+        tight setting for the first half of its travel — while it is still
+        mostly behind the clip — and only begins to spread once it is properly
+        in view. Running past the end of the rise, the letters are still
+        opening after the line has stopped moving.
+      */
+      tl.fromTo(
+        lastWord,
+        { letterSpacing: '-0.04em' },
+        { letterSpacing: '0em', duration: 1.4, ease: 'expo.out' },
+        '<0.55'
+      );
 
-    return () => {
-      tl.kill();
-      if (tickerInterval !== null) window.clearInterval(tickerInterval);
-      if (resetTimeout) window.clearTimeout(resetTimeout);
-      if (onMouseMove) {
-        window.removeEventListener('mousemove', onMouseMove);
+      if (SHOW_TOP) {
+        tl.to('.hero__badge', { opacity: 1, duration: 0.6, ease: 'power2.out' })
+          .fromTo(
+            '.hero__badge-text',
+            { x: -8, opacity: 0 },
+            { x: 0, opacity: 1, duration: 0.7, ease: 'expo.out' },
+            '<'
+          )
+          .fromTo(
+            '.hero__badge-line',
+            { scaleX: 0 },
+            {
+              scaleX: 1,
+              duration: 0.6,
+              ease: 'expo.out',
+              transformOrigin: 'left center',
+            },
+            '<0.2'
+          )
+          .to(
+            '.hero__ticker',
+            { opacity: 1, duration: 0.5, ease: 'power2.out' },
+            '-=0.4'
+          );
       }
-    };
+
+      /*
+        The overlap is measured against the beat before it: the ticker when
+        the top is up, otherwise the name's own tracking tween, which the copy
+        starts under rather than waiting out.
+      */
+      tl.fromTo(
+        '.hero__desc',
+        { y: 30 },
+        { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' },
+        SHOW_TOP ? '-=0.2' : '-=1.1'
+      )
+        .fromTo(
+          '.hero__cta',
+          { y: 30 },
+          { opacity: 1, y: 0, duration: 0.7, ease: 'power2.out' },
+          '-=0.6'
+        )
+        .fromTo(
+          '.hero__scroll',
+          { y: 30 },
+          { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' },
+          '<0.1'
+        );
+
+      /* the role ticker rolls one line per beat, then snaps back to the top */
+      let index = 1;
+      let resetTimeout: number | null = null;
+      let interval: number | null = null;
+
+      if (SHOW_TOP) {
+        tl.add(() => {
+          interval = window.setInterval(() => {
+            gsap.to('.hero__ticker-track', {
+              y: `-${index * 1.2}em`,
+              duration: 0.6,
+              ease: 'expo.inOut',
+            });
+            index += 1;
+            if (index >= roles.length + 1) {
+              resetTimeout = window.setTimeout(() => {
+                gsap.set('.hero__ticker-track', { y: 0 });
+                index = 1;
+              }, 650);
+            }
+          }, 2500);
+        });
+      }
+
+      return () => {
+        if (interval !== null) window.clearInterval(interval);
+        if (resetTimeout !== null) window.clearTimeout(resetTimeout);
+      };
+    }, root);
+
+    return () => ctx.revert();
   }, [startAnimation]);
 
   return (
-    <section id="hero">
-      <div className="hero-badge">
-        <span className="hero-badge-dot"></span>
-        <span className="hero-badge-text">{badge}</span>
-        <span className="hero-badge-line"></span>
-      </div>
+    /*
+      The page inset lives on .hero__inner, not on the section, so the panel
+      itself stays full bleed to the edges.
 
-      <div className="hero-ticker">
-        <span className="hero-ticker-track">
-          {roles.map((r) => (
-            <span key={r}>{r}</span>
-          ))}
-          <span aria-hidden="true">{roles[0]}</span>
-        </span>
-      </div>
+      No dome here: the hero is the first panel, so nothing arrives into it.
+      The arc at its foot belongs to About, which draws its own.
+    */
+    <section id="hero" ref={rootRef}>
+      <div className="hero__inner">
+        {SHOW_TOP ? (
+          <div className="hero__top">
+            <div className="hero__badge">
+              <span className="hero__badge-dot" aria-hidden="true" />
+              <span className="hero__badge-text">{badge}</span>
+              <span className="hero__badge-line" aria-hidden="true" />
+            </div>
 
-      <h1 className="hero-name">
-        <span className="ln">
-          <span className="wd hero-name-first">{name.first}</span>
-        </span>
-        <span className="ln">
-          <span className="wd hero-name-last">{name.last}</span>
-        </span>
-      </h1>
+            <div className="hero__ticker">
+              {/*
+                The track holds one extra copy of the first role so the roll to
+                the end lands on it before the silent reset back to zero.
+              */}
+              <span className="hero__ticker-track">
+                {roles.map((role) => (
+                  <span key={role}>{role}</span>
+                ))}
+                <span aria-hidden="true">{roles[0]}</span>
+              </span>
+            </div>
+          </div>
+        ) : null}
 
-      <div className="hero-foot">
-        <p className="hero-desc">{description}</p>
+        {/*
+          The words use the same split-and-rise as every other heading on the
+          page. `manual` hands them to the intro timeline below, where the
+          rise is one beat of a longer move; without the intro they fall back
+          to revealing themselves on sight, like every other heading.
+        */}
+        <h1 className="hero__name">
+          <SplitWords className="ln hero__name-first" manual={startAnimation}>
+            {name.first}
+          </SplitWords>
+          <SplitWords className="ln hero__name-last" manual={startAnimation}>
+            {name.last}
+          </SplitWords>
+        </h1>
 
-        <a href={ctaHref} className="hero-cta">
-          <span className="hero-cta-text">{cta}</span>
-          <span className="hero-cta-icon">↗</span>
-        </a>
+        <div className="hero__foot">
+          <p className="hero__desc">{description}</p>
 
-        <div className="scroll-ind">
-          <div className="s-line"></div>
-          <span>{scrollLabel}</span>
+          <div className="hero__cta">
+            <Button href={ctaHref} variant="ink">
+              {cta}
+            </Button>
+          </div>
+
+          <div className="hero__scroll" aria-hidden="true">
+            <span className="hero__scroll-line" />
+            <span>{scrollLabel}</span>
+          </div>
         </div>
       </div>
     </section>

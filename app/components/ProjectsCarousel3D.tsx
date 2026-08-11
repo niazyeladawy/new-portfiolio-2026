@@ -9,6 +9,7 @@ import {
 } from 'react';
 import * as THREE from 'three';
 import { ArrowLeft, ArrowRight, ArrowUpRight } from 'lucide-react';
+import SectionDome from './SectionDome';
 import data from '../data.json';
 
 type Project = {
@@ -18,8 +19,8 @@ type Project = {
   link?: string;
   links?: { label: string; href: string }[];
   image: string;
-  bg: string;
-  accent: string;
+  /* one of the system's product-card blocks — used by StackCards, not here */
+  tone: string;
   short?: string;
   category?: string;
 };
@@ -51,6 +52,23 @@ const SPEED_REF = 3200; // px/sec of scrolling treated as full speed
 /* Fraction of the gap left after one second — smaller reacts faster. */
 const SPEED_ATTACK = 1e-4; // builds quickly as you pick up speed
 const SPEED_RELEASE = 0.45; // but takes its time coming back down
+
+/*
+  The scene has to paint colours the stylesheet owns — a WebGL clear colour or
+  a canvas fillStyle cannot be a `var()`. Reading the tokens off :root at run
+  time keeps the design system the single source of truth: no palette value is
+  ever written twice, here or in globals.css.
+*/
+const token = (name: string, fallback: string) => {
+  if (typeof window === 'undefined') return fallback;
+  const value = getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim();
+  return value || fallback;
+};
+
+/* the display face, spelled out: canvas cannot resolve --font-display */
+const DISPLAY_STACK = "'Veneer', 'Anton', ui-sans-serif, system-ui, sans-serif";
 
 const VERTEX = /* glsl */ `
   varying vec2 vUv;
@@ -144,8 +162,8 @@ const makeTitleTexture = (label: string, aspect: number) => {
       than the image, so it projects a little larger than the panel beneath.
     */
     const maxWidth = width * 0.78;
-    const font = (size: number) =>
-      `900 ${size}px "Libre Franklin", system-ui, sans-serif`;
+    /* weight 400 and uppercase — the display face has one weight and one case */
+    const font = (size: number) => `400 ${size}px ${DISPLAY_STACK}`;
 
     // canvas text scales linearly with font size, so one measurement fits it
     const fit = (rows: string[]) => {
@@ -154,23 +172,30 @@ const makeTitleTexture = (label: string, aspect: number) => {
       return Math.min(height * TITLE_MAX, (100 * maxWidth) / widest);
     };
 
-    let lines = [label];
+    const caps = label.toUpperCase();
+    let lines = [caps];
     let size = fit(lines);
 
     // a title too long to stay legible on one line breaks at its midpoint
     if (size < height * TITLE_WRAP_AT) {
-      lines = splitBalanced(label);
+      lines = splitBalanced(caps);
       size = fit(lines);
     }
 
     ctx.font = font(size);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    // a soft drop shadow sells the gap between the text and the image
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+    /*
+      The one soft edge in an otherwise flat system, and it is legibility
+      rather than elevation: this is white display type laid over arbitrary
+      project photography, where a light frame would swallow it. Ink from the
+      palette, and it also sells the gap between the floating title and the
+      image behind it.
+    */
+    ctx.shadowColor = token('--color-overlay', 'rgba(36, 36, 36, 0.5)');
     ctx.shadowBlur = size * 0.4;
     ctx.shadowOffsetY = size * 0.08;
-    ctx.fillStyle = 'rgba(245, 241, 232, 0.96)';
+    ctx.fillStyle = token('--color-white', '#FFFFFF');
 
     const lineHeight = size * 1.12;
     const first = height * 0.46 - ((lines.length - 1) * lineHeight) / 2;
@@ -194,6 +219,8 @@ const ProjectsCarousel3D = () => {
   const canvasHostRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const pillRef = useRef<HTMLDivElement>(null);
+  /* the round CTA that fades in over the facing panel */
+  const viewRef = useRef<HTMLAnchorElement>(null);
   const [active, setActive] = useState(0);
   const [ready, setReady] = useState(false);
   const goToRef = useRef<(index: number) => void>(() => {});
@@ -230,8 +257,19 @@ const ProjectsCarousel3D = () => {
     const drum = new THREE.Group();
     scene.add(drum);
 
+    /*
+      What a panel shows before its image lands. --color-border is the
+      system's media-card placeholder, so an unloaded panel reads as an empty
+      card rather than a hole in the drum.
+    */
+    const placeholder = new THREE.Color(token('--color-border', '#DBDED9'));
     const blank = new THREE.DataTexture(
-      new Uint8Array([10, 10, 10, 255]),
+      new Uint8Array([
+        Math.round(placeholder.r * 255),
+        Math.round(placeholder.g * 255),
+        Math.round(placeholder.b * 255),
+        255,
+      ]),
       1,
       1
     );
@@ -293,7 +331,7 @@ const ProjectsCarousel3D = () => {
           uMap: { value: blank },
           uRepeat: { value: new THREE.Vector2(1, 1) },
           uOffset: { value: new THREE.Vector2(0, 0) },
-          uFallback: { value: new THREE.Color('#141414') },
+          uFallback: { value: placeholder.clone() },
           uHasMap: { value: 0 },
           uOpacity: { value: reflect ? 0.4 : 1 },
           uDim: { value: 1 },
@@ -563,6 +601,7 @@ const ProjectsCarousel3D = () => {
     let velocity = 0; // items per second
     let hovered = false; // pointer is over the facing panel
     let hoverAmt = 0; // eased 0→1 driving the hover scale
+    let hoverShown = 0; // last value written to the stage's hover class
 
     const el = renderer.domElement;
 
@@ -599,6 +638,23 @@ const ProjectsCarousel3D = () => {
     const onMove = (e: PointerEvent) => {
       // hover runs on every move, drag or not, so it must precede the guard
       hovered = !dragging && pickIndex(e) === facingIndex();
+
+      /*
+        The CTA *is* the cursor over the facing panel, so its position is
+        written here rather than tweened: anything eased would trail the
+        pointer, and a cursor that lags reads as a dropped frame.
+
+        Two custom properties instead of an inline transform, so CSS keeps
+        ownership of the rest of it — the scale on reveal and the parked
+        position under keyboard focus would both be clobbered by a transform
+        written from here every move.
+      */
+      const cursor = viewRef.current;
+      if (cursor) {
+        const rect = el.getBoundingClientRect();
+        cursor.style.setProperty('--p3d-cursor-x', `${e.clientX - rect.left}px`);
+        cursor.style.setProperty('--p3d-cursor-y', `${e.clientY - rect.top}px`);
+      }
 
       if (!dragging || e.pointerId !== pointerId) return;
       const fromDownX = e.clientX - downX;
@@ -856,6 +912,13 @@ const ProjectsCarousel3D = () => {
       }
 
       const hoverGoal = hovered && !dragging ? 1 : 0;
+
+      /* the CTA rides the same signal as the hover scale, so they arrive together */
+      if (hoverGoal !== hoverShown) {
+        hoverShown = hoverGoal;
+        stage.classList.toggle('is-hovering', hoverGoal === 1);
+      }
+
       if (Math.abs(hoverGoal - hoverAmt) > 0.0005) {
         hoverAmt += (hoverGoal - hoverAmt) * (1 - Math.pow(0.004, dt));
         dirty = true;
@@ -964,6 +1027,14 @@ const ProjectsCarousel3D = () => {
 
 
   return (
+    <>
+    {/*
+      Red rising out of About's ivory. It sits outside the track, not in it:
+      the drum maps scroll position across the track's height, so anything
+      added inside would start it turning during the arc.
+    */}
+    <SectionDome tone="red" from="ivory" />
+
     <div
       ref={trackRef}
       className="p3d-track"
@@ -992,7 +1063,6 @@ const ProjectsCarousel3D = () => {
     >
     <section className="p3d-section" aria-label={COPY.sectionLabel}>
       <header className="p3d-head">
-        <span className="p3d-eyebrow">{COPY.sectionLabel}</span>
         <span className="p3d-hint">{COPY.hint}</span>
       </header>
 
@@ -1009,19 +1079,31 @@ const ProjectsCarousel3D = () => {
         aria-label={`${COPY.sectionLabel}: ${current.title}`}
       >
         <div ref={canvasHostRef} className="p3d-canvas-host" />
-      </div>
 
-      {href ? (
-        <a
-          className="p3d-view"
-          href={href}
-          target="_blank"
-          rel="noreferrer"
-          aria-label={`${COPY.viewLabel} — ${current.title}`}
-        >
-          {COPY.viewLabel}
-        </a>
-      ) : null}
+        {/*
+          The cursor over the facing panel. A click anywhere on that panel
+          already opens the project, so the arrow is not a target to aim at —
+          it replaces the pointer and says what the whole panel does. Hence
+          pointer-events: none: it must never eat the click it is advertising,
+          and the canvas underneath has to keep receiving every move.
+
+          Still a real link so the keyboard route survives, since the canvas
+          click cannot be tabbed to. Under focus it parks in the middle of the
+          stage and stops being a cursor — see globals.css.
+        */}
+        {href ? (
+          <a
+            ref={viewRef}
+            className="p3d-view"
+            href={href}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`${COPY.viewLabel} — ${current.title}`}
+          >
+            <ArrowUpRight size={26} strokeWidth={2.25} aria-hidden="true" />
+          </a>
+        ) : null}
+      </div>
 
       <div className="p3d-bar">
         {/*
@@ -1056,7 +1138,7 @@ const ProjectsCarousel3D = () => {
             </span>
           </span>
 
-          <span className="p3d-roll p3d-roll-count text-center">
+          <span className="p3d-roll p3d-roll-count">
             {ITEMS.map((item, i) => (
               <span key={item.num} className="p3d-roll-slide" data-i={i}>
                 <span className="p3d-count" aria-hidden={i !== active}>
@@ -1106,6 +1188,7 @@ const ProjectsCarousel3D = () => {
       </p>
     </section>
     </div>
+    </>
   );
 };
 

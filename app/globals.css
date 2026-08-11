@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   PORTFOLIO DESIGN SYSTEM
+   Implements design-system/portfolio/MASTER.md.
+
+   Rules that govern every rule below:
+     - no hex literals outside :root
+     - no box-shadow outside --shadow-focus
+     - Veneer is display-only: uppercase, weight 400, sub-1 leading
+     - body copy on colored panels is --color-foreground, never white or olive
+     - the paper grain is applied once, on body::before, and nowhere else
+   ========================================================================= */
+
 *,
 *::before,
 *::after {
@@ -7,1007 +19,1244 @@
   padding: 0;
   box-sizing: border-box;
 }
+
+/* ---------------------------------------------------------------- tokens */
+
 :root {
-  --black: #060606;
-  --forest: #091a12;
-  --cream: #f0ebe0;
-  --white: #f5f1e8;
-  --mint: #3dffa0;
-  --orange: #ff5b2e;
-  --coral: #ff8fa0;
-  --font: "Libre Franklin", sans-serif;
+  /* ---- Surfaces ---- */
+  --color-ivory:        #FFF9EF; /* default page background */
+  --color-white:        #FFFFFF;
+  --color-sand:         #F2EADF; /* quiet secondary surface */
+  --color-sand-hover:   #E9DCCA;
+
+  /* ---- Ink ---- */
+  --color-ink:          #242424; /* body text, icon circles, overlays */
+
+  /* ---- Brand blocks ---- */
+  --color-olive:        #889583; /* primary */
+  --color-red:          #ED785E; /* accent / CTA */
+  --color-red-hover:    #C05E48;
+  --color-yellow:       #FFC978; /* footer, product panel */
+  --color-yellow-deep:  #FFBD5B;
+  --color-green:        #9EBF99; /* product panel */
+  --color-lightblue:    #C2D1DD; /* secondary */
+  --color-cerulean:     #A6C1D6; /* display-type tint */
+  --color-gray:         #DBDED9; /* hairlines on ivory */
+
+  /* ---- Semantic roles ---- */
+  --color-primary:      var(--color-olive);
+  --color-secondary:    var(--color-lightblue);
+  --color-accent:       var(--color-red);
+  --color-accent-hover: var(--color-red-hover);
+  --color-background:   var(--color-ivory);
+  --color-foreground:   var(--color-ink);
+  --color-border:       var(--color-gray);
+  --color-border-onblock: rgba(255, 255, 255, 1); /* hairlines inside colored panels */
+  --color-overlay:      rgba(36, 36, 36, 0.5);
+  --color-muted:        rgba(136, 149, 131, 0.4); /* placeholders only */
+
+  /*
+    Ink at reduced strength, for secondary copy. Derived rather than a new
+    colour: every one of these still resolves to --color-foreground's hue, so
+    the "body copy is ink" rule holds even where the copy steps back.
+    0.62 on ivory is ~8:1, 0.45 is ~5.4:1 — both clear of 4.5:1.
+  */
+  --color-foreground-70: rgba(36, 36, 36, 0.72);
+  --color-foreground-55: rgba(36, 36, 36, 0.62);
+
+  /* ---- Radii ---- */
+  --radius-xs:     5px;
+  --radius-sm:    12px;
+  --radius-md:    18px;
+  --radius-lg:    22px;  /* inputs */
+  --radius-xl:    28px;  /* buttons */
+  --radius-2xl:   36px;  /* media cards */
+  --radius-3xl:   48px;  /* panels, sheets, big blocks */
+  --radius-full: 9999px;
+  --radius-circle: 50%;  /* nav toggle, social, play buttons */
+
+  /* ---- Shadows: flat system ---- */
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-focus: 0 0 0 3px rgba(136, 149, 131, 0.45);
+
+  /* ---- Motion ---- */
+  --ease-power4:     cubic-bezier(0.215, 0.61, 0.355, 1);
+  --ease-snappy:     cubic-bezier(0.694, 0.048, 0.335, 1);
+  --ease-soft:       cubic-bezier(0.165, 0.84, 0.44, 1);
+  --ease-snap:       cubic-bezier(0, 0.49, 0.09, 0.97);
+  --ease-bounce:     cubic-bezier(0.3, 1.4, 0.5, 0.9);
+  --duration-fast:   200ms;
+  --duration-base:   320ms;
+  --duration-slow:   400ms;
+
+
+  
+  
+  /* ---- Layers ---- */
+  --z-behind: -1;
+  --z-default: 1;
+  --z-nav: 90;
+  --z-god: 420;
+  /* above --z-god: the paper sheet lies over the whole page, modals included */
+  --z-grain: 430;
+
+  /* ---- Spacing ---- */
+  --space-xs:  0.25rem;
+  --space-sm:  0.5rem;
+  --space-md:  1rem;
+  --space-lg:  1.5rem;
+  --space-xl:  2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+
+  /* section rhythm — the air between full-bleed colour blocks */
+  --space-section-sm: 6rem;
+  --space-section-md: 9rem;
+  --space-section-lg: 13rem;
+
+  /* grid: page inset matches the nav toggle's right offset */
+  --page-inset: 2.583%;
+  --grid-gutter: var(--space-lg);
+
+  /* ---- Type scale (see the step-up media queries below) ---- */
+  --text-h1: 60px;
+  --text-h2: 48px;
+  --text-h3: 36px;
+  --text-h4: 24px;
+  --text-h5: 21px;
+  --text-body: 16px;
+  --text-label: 21px;
 }
+
+/* ----------------------------------------------------------------- fonts */
+
+/*
+  Veneer is a licensed face (Adobe Fonts / Yellow Design Studio) and is NOT
+  redistributable, so no file ships with this repo. Drop `veneer.woff2` into
+  public/fonts/ and this rule picks it up with no other change.
+
+  Until then the stack falls through to Anton — loaded in app/layout.tsx via
+  next/font and exposed as --font-display-fallback. Anton is a substitute, not
+  Veneer: same single weight, same tight uppercase silhouette at display size,
+  but a clean grotesque where Veneer is letterpress-textured.
+*/
+@font-face {
+  font-family: 'Veneer';
+  src: url('/fonts/Veneer.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /*
+    --font-inter and --font-anton are declared by next/font in layout.tsx.
+    The literal names after them keep the cascade honest if that ever changes.
+  */
+  --font-display: 'Veneer', var(--font-anton), 'Anton', ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-inter), 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ------------------------------------------------------------------ base */
+
 html {
   scroll-behavior: smooth;
+  /*
+    The ground lives on <html>, not <body>, so body::before can sit at
+    --z-behind and still paint on top of it. Painting it on body would bury
+    the grain underneath the page's own background.
+  */
+  background-color: var(--color-background);
+  -webkit-text-size-adjust: 100%;
 }
+
 body {
-  background: var(--black);
-  color: var(--white);
-  font-family: var(--font);
+  position: relative;
+  min-height: 100svh;
+  color: var(--color-foreground);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: 1.3;
   overflow-x: hidden;
-  cursor: url("/images/cursor-default-70.svg") 4 4, auto;
 }
+
+/*
+  Paper grain — applied once, globally, exactly as MASTER.md requires: one
+  rule, one element, low opacity, pointer-events: none.
+
+  It sits ABOVE the content rather than at --z-behind, which is the one place
+  this file departs from the spec's own snippet. The spec asks for two things
+  that cannot both hold: "every surface carries the grain", and z-index -1.
+  At -1 the sheet is painted under every full-bleed colour panel on the page,
+  so four of the five sections come out perfectly smooth and only the bare
+  ivory ground is textured. Overlaying it is what actually delivers the stated
+  intent.
+
+  The cost is bounded: the texture is compressed into the 0.82–1.0 band and
+  drawn at 0.4 opacity, so multiply darkens anything under it by at most ~7%,
+  applied equally to text and to its background. No contrast pair moves across
+  a threshold.
+*/
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-grain);
+  background-image: url('/textures/paper.svg');
+  background-size: 360px;
+  opacity: 0.4;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-white);
+}
+
+a { color: inherit; text-decoration: none; }
+img, svg, video { display: block; max-width: 100%; }
+ul, ol { list-style: none; }
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+}
+
 a,
 button,
-.proj-row,
-.s-tag,
-.exp-card,
-.cta-link,
-.soc-a,
-.nav-links a,
-.sc-card-cta,
-.sc-card-sublinks a {
-  cursor: url("/images/cursor-pointer-70.svg") 8 4, pointer;
-}
-::selection {
-  background: var(--mint);
-  color: var(--forest);
+[role='button'],
+label,
+summary,
+input[type='checkbox'],
+input[type='radio'] {
+  cursor: pointer;
 }
 
-/* GRAIN */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
+/* every focusable thing gets the one focus ring the system allows */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  border-radius: var(--radius-xs);
+}
+
+/* ------------------------------------------------------------ type scale */
+
+.h1, h1, .h2, h2, .h3, h3, .h4, h4 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  /* Veneer's caps stack tightly; the display sizes lean on that overlap */
+  letter-spacing: 0.005em;
+}
+
+.h1, h1 { font-size: var(--text-h1); line-height: 0.84; }
+.h2, h2 { font-size: var(--text-h2); line-height: 0.90; }
+.h3, h3 { font-size: var(--text-h3); line-height: 0.896; }
+.h4, h4 { font-size: var(--text-h4); line-height: 1; }
+
+.h5, h5 {
+  font-family: var(--font-body);
+  font-size: var(--text-h5);
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.p, p {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+@media (min-width: 640px) {
+  :root { --text-h1: 120px; --text-h2: 100px; }
+}
+@media (min-width: 768px) {
+  :root { --text-h2: 150px; --text-h3: 72px; }
+}
+@media (min-width: 1024px) {
+  :root { --text-h1: 200px; --text-h2: 200px; --text-h3: 96px; --text-h4: 36px; }
+}
+@media (min-width: 1536px) {
+  :root { --text-h1: 280px; }
+}
+
+/* ----------------------------------------------------- layout primitives */
+
+.shell {
+  width: 100%;
+  padding-inline: var(--page-inset);
+}
+
+/*
+  Full-bleed colour panels. Each one is its own ground; the class sets the
+  background and nothing else, so a panel can carry any layout inside it.
+*/
+.panel { position: relative; width: 100%; }
+.panel--ivory      { background-color: var(--color-background); }
+.panel--sand       { background-color: var(--color-sand); }
+.panel--olive      { background-color: var(--color-primary); }
+.panel--lightblue  { background-color: var(--color-secondary); }
+.panel--red        { background-color: var(--color-accent); }
+.panel--yellow     { background-color: var(--color-yellow); }
+.panel--green      { background-color: var(--color-green); }
+
+/* Full-width hairlines bracketing a display heading */
+.section__line {
+  display: inline-flex;
+  width: 100%;
+  height: 2px;
+  background-color: var(--color-border-onblock); /* white inside colored panels */
+  border: none;
+}
+
+.section__line--onivory {
+  height: 1px;
+  background-color: var(--color-border);
+}
+
+/*
+  Dome: how every section arrives. The arriving panel's ground opens as a half
+  dome and fills the box on scroll, swallowing the strip of the previous panel
+  still showing at the shoulders. See SectionDome.tsx for the path itself.
+
+  It sits in normal flow, directly above the section it introduces, so it owns
+  the scroll length the arc needs to open across and is clear of the viewport
+  by the time a pinned or sticky section below it sticks.
+
+  The colour behind the arc comes from a .panel--* utility on the same element,
+  so the dome and the panel above it can never resolve a colour differently.
+  Only the fill is named here.
+
+  The SVG follows its natural 1511:404 aspect up to a ceiling. Past roughly a
+  1200px viewport that aspect is all empty colour — the arc is done curving
+  long before the box stops growing — so the height caps and the path stretches
+  to fill it (preserveAspectRatio="none"), which flattens the dome slightly on
+  a wide screen instead of pushing the section below it down by half a screen.
+
+  line-height 0 kills the inline descender gap under it, and the -1px margin
+  closes the subpixel seam at the baseline.
+*/
+.dome {
+  position: relative;
+  z-index: var(--z-default);
+  width: 100%;
+  margin-bottom: -1px;
+  line-height: 0;
   pointer-events: none;
-  z-index: 9000;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
-  background-size: 160px;
-  opacity: 0.5;
-  mix-blend-mode: overlay;
 }
 
-/* LOADER */
+.dome svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 320px;
+}
 
+.dome--ivory     { color: var(--color-background); }
+.dome--sand      { color: var(--color-sand); }
+.dome--olive     { color: var(--color-primary); }
+.dome--lightblue { color: var(--color-secondary); }
+.dome--red       { color: var(--color-accent); }
+.dome--yellow    { color: var(--color-yellow); }
+.dome--green     { color: var(--color-green); }
 
-/* INTRO OVERLAY */
-#intro-overlay {
+/* --------------------------------------------------------------- buttons */
+
+/*
+  Signature interaction: a fill sweeps up from below and rounds off as it
+  scales, while the label colour flips. Nothing transforms on the button
+  itself, so no layout shifts under the cursor.
+*/
+.button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 25px 40px;
+  border: 2px solid transparent;
+  border-radius: var(--radius-xl);
+  background: transparent;
+  cursor: pointer;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 20%;
+  transform: translateY(140%) scale(1);
+  transition: transform var(--duration-slow) var(--ease-power4),
+              border-radius var(--duration-slow) var(--ease-power4);
+  pointer-events: none;
+}
+
+.button:hover::after {
+  transform: translateY(0) scale(1.5);
+  border-radius: var(--radius-circle);
+}
+
+.button__text {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-lg);
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  font-weight: 700;
+  line-height: 1.083;
+  text-transform: uppercase;
+  transition: color var(--duration-base) ease-in-out;
+}
+
+.button__icon {
+  flex: none;
+  stroke: currentColor;
+  transition: transform var(--duration-base) var(--ease-power4);
+}
+
+.button:hover .button__icon { transform: translate(3px, -3px); }
+
+.button:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+/* Primary — on a colored panel: white outline, fills white, label goes ink */
+.button--primary { border-color: var(--color-white); }
+.button--primary .button__text { color: var(--color-white); }
+.button--primary::after { background-color: var(--color-white); }
+.button--primary:hover .button__text { color: var(--color-foreground); }
+
+/* Accent — on ivory: red outline, fills red, label goes white */
+.button--red { border-color: var(--color-accent); }
+.button--red .button__text { color: var(--color-accent); }
+.button--red::after { background-color: var(--color-accent); }
+.button--red:hover .button__text { color: var(--color-white); }
+
+/* Ink — on a light colored panel where red would fight the ground */
+.button--ink { border-color: var(--color-foreground); }
+.button--ink .button__text { color: var(--color-foreground); }
+.button--ink::after { background-color: var(--color-foreground); }
+.button--ink:hover .button__text { color: var(--color-white); }
+
+/* Secondary — quiet, sand surface */
+.button--secondary {
+  border-color: var(--color-sand);
+  background-color: var(--color-sand);
+}
+.button--secondary .button__text { color: var(--color-foreground); }
+.button--secondary::after { background-color: var(--color-sand-hover); }
+
+/* a smaller pill for inline actions; same sweep, same radius family */
+.button--compact { padding: 16px 28px; }
+.button--compact .button__text { font-size: 1rem; gap: var(--space-md); }
+
+@media (min-width: 1024px) { .button { padding: 26px 50px; } }
+@media (max-width: 639px)  { .button { width: 100%; } }
+
+/* ----------------------------------------------------------------- cards */
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--radius-3xl);
+  padding: var(--space-2xl);
+  background-color: var(--color-background);
+  box-shadow: var(--shadow-md);
+  transition: background-color var(--duration-base) var(--ease-power4);
+  cursor: pointer;
+}
+
+.card--yellow { background-color: var(--color-yellow); }
+.card--green  { background-color: var(--color-green); }
+.card--red    { background-color: var(--color-accent); }
+.card--olive  { background-color: var(--color-primary); }
+.card--blue   { background-color: var(--color-secondary); }
+
+.card__title {
+  position: relative;
+  z-index: 10;
+  font-family: var(--font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-align: center;
+  color: var(--color-white);
+  font-size: 62px;
+  line-height: 0.9;
+}
+
+.card__button { position: absolute; bottom: 3%; z-index: 20; width: 90%; }
+
+.card__body { color: var(--color-foreground); } /* body copy never goes white on a panel */
+
+@media (min-width: 1024px) {
+  .card__title  { font-size: 96px; }
+  .card__button { bottom: 7%; width: 80%; }
+}
+
+/* Media card */
+.card--media {
+  aspect-ratio: 1 / 0.664;
+  border-radius: var(--radius-2xl);
+  background-color: var(--color-border);
+}
+
+/* ---------------------------------------------------------------- inputs */
+
+.input {
+  width: 100%;
+  appearance: none;
+  padding: 22px var(--space-lg);
+  border: 1px solid var(--color-white);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-white);
+  color: var(--color-foreground);
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  line-height: 1.2;
+  transition: border-color var(--duration-base) var(--ease-power4);
+}
+
+.input::placeholder {
+  color: var(--color-muted);
+  font-size: var(--text-label);
+  line-height: 1.2;
+}
+
+.input:focus { outline: none; border-color: var(--color-primary); }
+.input:focus-visible { box-shadow: var(--shadow-focus); }
+
+textarea.input { min-height: 120px; resize: none; }
+
+.field { display: flex; flex-direction: column; gap: var(--space-sm); }
+
+.field__label {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-foreground);
+}
+
+/* Radio / checkbox — ink dot inside a ringed circle */
+.checkbox { display: inline-flex; align-items: center; gap: var(--space-md); }
+
+.checkbox__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.checkbox__box {
+  position: relative;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--color-foreground);
+  border-radius: var(--radius-circle);
+  cursor: pointer;
+}
+
+.checkbox__box::after {
+  content: '';
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: var(--radius-circle);
+  background-color: var(--color-foreground);
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-power4);
+}
+
+.checkbox__input:checked + .checkbox__box::after { opacity: 1; }
+.checkbox__input:focus-visible + .checkbox__box { box-shadow: var(--shadow-focus); }
+
+/* ---------------------------------------------------------------- modals */
+
+.modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 7500;
+  z-index: var(--z-god);
+  background: var(--color-overlay);
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  background: var(--color-background);
+  border-radius: var(--radius-3xl);
+  padding: var(--space-2xl);
+  box-shadow: var(--shadow-xl); /* none — separation comes from the overlay */
+  max-width: 500px;
+  width: 90%;
+}
+
+/* ------------------------------------------------------------------- nav */
+
+.nav__toggle {
+  position: fixed;
+  top: 35px;
+  right: var(--page-inset);
+  z-index: calc(var(--z-god) + 1);
   display: flex;
   align-items: center;
   justify-content: center;
-  pointer-events: none;
-  background: var(--black);
-  opacity: 0;
-}
-#intro-name-wrap {
-  font-size: clamp(5rem, 13vw, 12rem);
-  font-weight: 900;
-  line-height: 0.9;
-  letter-spacing: -0.04em;
-  text-transform: uppercase;
-  will-change: transform;
-}
-#intro-name-wrap .ln {
-  display: block;
-  overflow: hidden;
-}
-#intro-name-wrap .wd {
-  display: block;
-}
-#intro-name-wrap em {
-  color: var(--mint);
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-circle);
+  background-color: var(--color-primary);
+  cursor: pointer;
+  transition: background-color var(--duration-base) var(--ease-power4);
 }
 
-/* NAV */
-nav {
+.nav__toggle:hover { background-color: var(--color-accent); }
+
+.nav__toggle span {
+  position: absolute;
+  width: 28px;
+  height: 1px;
+  background-color: var(--color-foreground);
+  /*
+    Centre origin. Pivoting about the right end swung both bars onto the same
+    point and drew a chevron rather than the cross the open state is meant to
+    be — and the control announces itself as "Close menu" there.
+  */
+  transform-origin: 50% 50%;
+  transition: transform 340ms var(--ease-power4);
+}
+
+.nav__toggle span:nth-child(1) { transform: translateY(-5px); }
+.nav__toggle span:nth-child(2) { transform: translateY(5px); }
+
+.nav__toggle[aria-expanded='true'] span:nth-child(1) {
+  transform: translateY(0) rotate(-45deg);
+}
+.nav__toggle[aria-expanded='true'] span:nth-child(2) {
+  transform: translateY(0) rotate(45deg);
+}
+
+/*
+  The panel is always in the tree so its contents can be animated rather
+  than mounted. `visibility` is what actually takes it out of the tab order
+  and off the hit-testing surface while it is closed.
+
+  It opens as a circle growing from the centre of the toggle. The toggle is in
+  the top-right corner, so three quarters of that circle are off-screen and
+  what you see is a quarter arc sweeping down across the page. clip-path, so
+  the edge is hard — nothing here is blurred or feathered.
+
+  150% of circle()'s reference (√(w²+h²)/√2) is always at least the viewport
+  diagonal, so the arc clears the far corner at any aspect ratio. Both ends of
+  the transition are percentages: mixing px and % across a basic-shape is
+  where clip-path interpolation gets unreliable.
+
+  The origin tracks the toggle rather than being written twice — the phone
+  breakpoint moves and shrinks the button, and the arc has to follow it.
+*/
+.nav__panel {
+  --nav-toggle-size: 72px;
+  --nav-toggle-top: 35px;
+  --nav-origin-x: calc(100% - var(--page-inset) - var(--nav-toggle-size) / 2);
+  --nav-origin-y: calc(var(--nav-toggle-top) + var(--nav-toggle-size) / 2);
+
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 500;
+  inset: 0;
+  z-index: var(--z-god);
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.8rem 4rem;
-  transition: transform 0.4s;
-}
-nav.hidden {
-  transform: translateY(-120%);
-}
-.nav-logo {
-  font-size: 0.88rem;
-  font-weight: 900;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--white);
-  text-decoration: none;
-}
-.nav-links {
-  display: flex;
-  gap: 2.5rem;
-  list-style: none;
-}
-.nav-links a {
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba(245, 241, 232, 0.45);
-  text-decoration: none;
-  transition: color 0.25s;
-}
-.nav-links a:hover {
-  color: var(--white);
+  flex-direction: column;
+  justify-content: center;
+  padding-inline: var(--page-inset);
+  background-color: var(--color-background);
+  clip-path: circle(0% at var(--nav-origin-x) var(--nav-origin-y));
+  visibility: hidden;
+  transition: clip-path 720ms var(--ease-power4),
+              visibility 0s linear 720ms;
 }
 
-/* HERO */
+.nav__panel.is-open {
+  clip-path: circle(150% at var(--nav-origin-x) var(--nav-origin-y));
+  visibility: visible;
+  transition: clip-path 720ms var(--ease-power4), visibility 0s;
+}
+
+.nav__list { display: flex; flex-direction: column; }
+
+.nav__link {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  line-height: 1.1;
+  font-size: 5vw;
+  transition: color var(--duration-base) var(--ease-power4);
+}
+
+/*
+  The rule sits on the word, not on the link. A link's text-decoration is
+  painted by the link's own box and so is not clipped by the word's mask —
+  left there it would show as a naked underline for the beat before the word
+  rises into it.
+*/
+.nav__link .splitted__word-wrap { text-decoration: underline; }
+
+.nav__link:hover { color: var(--color-foreground); }
+
+.nav__socials {
+  display: flex;
+  gap: var(--space-md);
+  margin-top: var(--space-2xl);
+}
+
+.nav__social {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-circle);
+  background-color: var(--color-foreground);
+  color: var(--color-background);
+  transition: background-color var(--duration-base) var(--ease-power4);
+}
+
+.nav__social:hover { background-color: var(--color-primary); }
+
+.nav__meta {
+  margin-top: var(--space-xl);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-lg);
+  font-size: var(--text-body);
+  color: var(--color-foreground-70);
+}
+
+@media (max-width: 767px) {
+  .nav__toggle { top: 10px; width: 60px; height: 60px; }
+  .nav__panel { --nav-toggle-size: 60px; --nav-toggle-top: 10px; }
+  .nav__social { width: 48px; height: 48px; }
+}
+
+/*
+  Reduced motion gets the panel, not the sweep: the arc is a 720ms move across
+  the whole viewport, which is exactly what reduce is asking not to see.
+*/
+@media (prefers-reduced-motion: reduce) {
+  .nav__panel {
+    clip-path: none;
+    opacity: 0;
+    transition: opacity var(--duration-fast) linear,
+                visibility 0s linear var(--duration-fast);
+  }
+
+  .nav__panel.is-open {
+    clip-path: none;
+    opacity: 1;
+    transition: opacity var(--duration-fast) linear, visibility 0s;
+  }
+}
+
+/* the skip link only exists for keyboards; it stays out of the way until then */
+.skip-link {
+  position: absolute;
+  top: var(--space-md);
+  left: var(--space-md);
+  z-index: calc(var(--z-god) + 2);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-xs);
+  background-color: var(--color-foreground);
+  color: var(--color-white);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transform: translateY(-200%);
+  transition: transform var(--duration-fast) var(--ease-power4);
+}
+
+.skip-link:focus-visible { transform: translateY(0); }
+
+/* ------------------------------------------------------------------ hero */
+
 #hero {
-  min-height: 100vh;
+  position: relative;
+  z-index: var(--z-default);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: 2rem 4rem 4.5rem;
+  min-height: 100svh;
+
+  /*
+    No top padding: with the panel's content ranged along the bottom and
+    nothing above the name, it only ate the height the stacked foot needs to
+    keep the scroll cue above the fold.
+  */
+  padding-block: 0;
   overflow: hidden;
+  background-color: var(--color-secondary);
+}
+
+#hero-canvas { position: absolute; inset: 0; opacity: 0.45; }
+
+/*
+  The arc at the foot of this panel is drawn by the section below it, so the
+  copy only needs to clear the panel's own edge rather than reserving room for
+  a dome that no longer lives here.
+*/
+.hero__inner {
   position: relative;
+  z-index: var(--z-default);
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  justify-content: flex-end;
+  /*
+    Centred, not ranged left. align-items centres the blocks and text-align
+    centres their lines; the foot has to be told to stretch back to full width
+    because align-items would otherwise shrink it to its content.
+  */
+  align-items: center;
+  text-align: center;
+  padding-inline: var(--page-inset);
+  padding-bottom: var(--space-2xl);
 }
-#hero-canvas {
-  position: absolute;
-  inset: 0;
-  opacity: 0.45;
-}
-.hero-badge {
+
+.hero__inner > * { width: 100%; }
+
+.hero__badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.9rem;
-  margin-bottom: 2rem;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
   opacity: 0;
-  overflow: hidden;
 }
-.hero-badge-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--mint);
-  flex-shrink: 0;
-  box-shadow: 0 0 10px var(--mint);
-  animation: pulse-dot 2.5s ease-in-out infinite;
+
+.hero__badge-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-circle);
+  background-color: var(--color-foreground);
+  animation: hero-pulse 2.5s var(--ease-soft) infinite;
 }
-@keyframes pulse-dot {
-  0%,
-  100% {
-    box-shadow: 0 0 8px var(--mint);
-  }
-  50% {
-    box-shadow: 0 0 20px var(--mint), 0 0 30px rgba(61, 255, 160, 0.3);
-  }
+
+@keyframes hero-pulse {
+  0%, 100% { transform: scale(1);   opacity: 1; }
+  50%      { transform: scale(0.6); opacity: 0.55; }
 }
-.hero-badge-text {
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.22em;
+
+.hero__badge-text {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(245, 241, 232, 0.75);
-  display: inline-block;
-  transform: translateX(-8px);
+  color: var(--color-foreground);
   opacity: 0;
+  transform: translateX(-8px);
 }
-.hero-badge-line {
-  width: 40px;
+
+.hero__badge-line {
+  flex: none;
+  width: 64px;
   height: 1px;
-  background: linear-gradient(to right, var(--mint), transparent);
-  flex-shrink: 0;
+  background-color: var(--color-foreground);
+  opacity: 0.4;
   transform: scaleX(0);
   transform-origin: left;
 }
-.hero-name {
-  font-size: clamp(3.5rem, 9vw, 8rem);
-  font-weight: 900;
-  line-height: 0.9;
-  letter-spacing: -0.04em;
-  text-transform: uppercase;
-  margin-bottom: 3rem;
-  opacity: 0;
-}
-.hero-name .ln {
-  display: block;
+
+/*
+  The badge and the ticker pin to the top of the panel; `auto` here is what
+  splits the hero into a top cluster and a bottom cluster instead of packing
+  everything against the bottom rule.
+*/
+.hero__top { margin-bottom: auto; }
+
+/*
+  The role ticker rolls one line at a time inside a single-line window. The
+  window has to carry the same font-size as the track: 1.2em against the
+  inherited 16px is taller than a 0.78rem row, and the next role shows through
+  under the current one.
+*/
+.hero__ticker {
   overflow: hidden;
-}
-.hero-name .wd {
-  display: block;
-}
-.hero-name em {
-  color: var(--mint);
-}
-.hero-foot {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-}
-.hero-desc {
-  font-size: 0.88rem;
-  font-weight: 400;
-  line-height: 1.75;
-  color: rgba(245, 241, 232, 0.5);
-  max-width: 290px;
-  opacity: 0;
-}
-.scroll-ind {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.6rem;
-  opacity: 0;
-}
-.scroll-ind span {
-  font-size: 0.62rem;
-  font-weight: 900;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgba(245, 241, 232, 0.4);
-}
-.s-line {
-  width: 1px;
-  height: 50px;
-  background: linear-gradient(to bottom, var(--mint), transparent);
-  animation: sp 2.2s ease-in-out infinite;
-}
-@keyframes sp {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scaleY(1);
-  }
-  50% {
-    opacity: 0.3;
-    transform: scaleY(0.5);
-  }
-}
-.hero-name-first {
-  font-weight: 300;
-  font-style: italic;
-  color: rgba(245, 241, 232, 0.65);
-}
-.hero-name-last {
-  color: var(--white);
-}
-.hero-ticker {
-  overflow: hidden;
+  font-size: 0.78rem;
   height: 1.2em;
-  margin-bottom: 1.2rem;
   opacity: 0;
 }
-.hero-ticker-track {
+
+.hero__ticker-track {
   display: flex;
   flex-direction: column;
-  font-size: 0.72rem;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--mint);
   line-height: 1.2;
+  color: var(--color-foreground-70);
   will-change: transform;
 }
-.hero-ticker-track span {
-  display: block;
-  height: 1.2em;
-  flex-shrink: 0;
-}
-.hero-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.7rem 0.6rem 0.7rem 1.4rem;
-  border: 1.5px solid rgba(245, 241, 232, 0.12);
-  border-radius: 10px;
-  font-size: 0.78rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
+
+.hero__ticker-track span { display: block; height: 1.2em; flex-shrink: 0; }
+
+/*
+  The name bleeds edge to edge. Viewport units rather than the h1 step scale:
+  at 200px+ the two words have to stay locked to the page width, not to a
+  breakpoint. Sub-1 leading is the point — at 0.84 the two lines interlock,
+  which is Veneer's own metric and why the real face has to be the one loaded.
+  The padding keeps the first line's caps clear of the ticker above it.
+*/
+/*
+  No opacity: 0 here. The words rest below their own clip until the intro
+  lifts them, so the name has nothing left to hide — and a page whose script
+  never runs shows it rather than a blank panel.
+*/
+.hero__name {
+  padding-top: 0.14em;
+  margin-bottom: var(--space-xl);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 18.5vw;
+  line-height: 0.84;
   text-transform: uppercase;
-  text-decoration: none;
-  color: var(--white);
-  opacity: 0;
-  transition: border-color 0.25s, color 0.25s;
-  cursor: url("/images/cursor-pointer-70.svg") 8 4, pointer;
-  will-change: transform;
+  color: var(--color-foreground);
 }
-.hero-cta:hover {
-  border-color: rgba(61, 255, 160, 0.35);
-  color: var(--mint);
-}
-.hero-cta-icon {
-  display: inline-flex;
+
+/* one line per span; the clip that the words rise into is the word's own */
+.hero__name .ln { display: block; }
+.hero__name-first,.hero__name-last { color: var(--color-white); }
+
+/*
+  The foot stacks on the centre line with everything else rather than
+  spreading desc / button / cue across the full width — a centred name over a
+  three-column row reads as two different layouts stacked.
+*/
+.hero__foot {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  background: rgba(61, 255, 160, 0.08);
-  border: 1px solid rgba(61, 255, 160, 0.15);
-  font-size: 1rem;
-  color: var(--mint);
-  transition: transform 0.25s, background 0.25s;
-  flex-shrink: 0;
+  gap: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border-onblock);
 }
-.hero-cta:hover .hero-cta-icon {
-  transform: translate(2px, -2px);
-  background: rgba(61, 255, 160, 0.14);
+
+.hero__desc {
+  max-width: 62ch;
+  font-size: var(--text-h5);
+  line-height: 1.5;
+  color: var(--color-foreground);
+  opacity: 0;
+}
+
+/*
+  display: flex so the wrapper takes the row's cross-size; without it the
+  wrapper shrinks to the button's content width and the full-width button
+  rule below 640px has nothing to fill.
+*/
+.hero__cta { display: flex; opacity: 0; }
+
+.hero__scroll {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  opacity: 0;
+}
+
+.hero__scroll span {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-foreground-70);
+}
+
+.hero__scroll-line {
+  width: 1px;
+  height: 56px;
+  background-color: var(--color-foreground);
+  opacity: 0.5;
+  animation: hero-scroll 2.2s var(--ease-soft) infinite;
+  transform-origin: top;
+}
+
+@keyframes hero-scroll {
+  0%, 100% { opacity: 0.5; transform: scaleY(1); }
+  50%      { opacity: 0.15; transform: scaleY(0.45); }
+}
+
+/*
+  A two-line name at 18.5vw is ~31vw tall, which on a 16:9 screen is a little
+  over half the viewport. The foot below it stacks on the centre line and is
+  the best part of 400px, so the two only add up to one screen on a tall
+  display — below that the name steps down rather than overflowing the top of
+  the panel, which is where a bottom-ranged column spills.
+*/
+@media (min-width: 901px) and (max-height: 980px) {
+  .hero__name { font-size: 11vw; }
+}
+
+@media (min-width: 901px) and (max-height: 820px) {
+  .hero__name { font-size: 13.5vw; }
 }
 
 @media (max-width: 900px) {
-  .hero-foot {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1.5rem;
+  #hero { padding-block: calc(var(--space-3xl) * 1.5) 0; }
+  /* the button goes full width here, so the foot's items stop centring */
+  .hero__foot { align-items: stretch; gap: var(--space-lg); }
+  .hero__scroll { display: none; }
+  .hero__desc { font-size: var(--text-body); line-height: 1.5; }
+}
+
+/*
+  Phone. The badge is one long letter-spaced string next to a rule, and at
+  this width it runs past the right edge — which both scrolls the page
+  sideways and pushes the fixed nav toggle out of reach. The rule goes, the
+  string is allowed to wrap, and the top cluster keeps clear of the toggle.
+*/
+@media (max-width: 640px) {
+  .hero__top { padding-right: 72px; }
+
+  .hero__badge {
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
   }
-  .hero-cta {
-    align-self: flex-start;
+
+  .hero__badge-line { display: none; }
+
+  .hero__badge-text {
+    letter-spacing: 0.14em;
+    line-height: 1.4;
   }
 }
 
-/* MARQUEE */
-.mq-band {
-  overflow: hidden;
-  background: var(--mint);
-  padding: 0.8rem 0;
-}
-.mq-track {
-  display: flex;
-  width: max-content;
-  animation: mq 18s linear infinite;
-}
-.mq-item {
-  font-size: 0.78rem;
-  font-weight: 900;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--forest);
-  padding: 0 1.6rem;
-  white-space: nowrap;
-}
-.mq-sep {
-  color: var(--orange);
-}
-@keyframes mq {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
+/* ----------------------------------------------------------------- about */
 
-/* SECTION HEADER */
-.sec-label {
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-  margin-bottom: 5rem;
-  overflow: hidden;
-}
-.sec-label-num {
-  font-size: 0.68rem;
-  font-weight: 900;
-  letter-spacing: 0.2em;
-  color: var(--orange);
-  font-style: italic;
-}
-.sec-label-rule {
-  height: 1px;
-  flex: 1;
-  max-width: 60px;
-  background: currentColor;
-  opacity: 0.25;
-}
-.sec-label-text {
-  font-size: 0.68rem;
-  font-weight: 900;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba(245, 241, 232, 0.5);
-}
-.sec-ttl {
-  font-size: clamp(3rem, 7vw, 6.5rem);
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  text-transform: uppercase;
-  line-height: 1;
-  margin-bottom: 6rem;
-}
-.sec-ttl--light {
-  color: var(--white);
-}
-.sec-ttl--dark {
-  color: var(--forest);
-}
-
-/* ABOUT */
+/*
+  Pinned storytelling: the section holds the viewport while three chapters
+  cross-fade in place. Height is exactly one viewport — the scroll distance
+  is added by the pin, not by the box.
+*/
 #about {
-  background: var(--forest);
-  padding: 9rem 4rem;
-  overflow: hidden;
-}
-.about-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6rem;
-  align-items: start;
-}
-.about-text {
-  font-size: clamp(1.4rem, 2.2vw, 2rem);
-  font-weight: 700;
-  line-height: 1.48;
-  color: var(--white);
-}
-.about-text .aw {
-  display: inline-block;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.4s, transform 0.4s;
-}
-.about-text .aw.vis {
-  opacity: 1;
-  transform: translateY(0);
-}
-.about-r {
-  padding-top: 2.5rem;
-}
-.stats-row {
-  display: flex;
-  gap: 3rem;
-  margin-bottom: 3.5rem;
-}
-.stat-v {
-  font-size: 3.8rem;
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  color: var(--mint);
-  line-height: 1;
-}
-.stat-l {
-  font-size: 0.65rem;
-  font-weight: 900;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(245, 241, 232, 0.4);
-  margin-top: 0.2rem;
-}
-.tags-wrap {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-.s-tag {
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 0.38rem 0.85rem;
-  border: 1.5px solid rgba(245, 241, 232, 0.12);
-  border-radius: 5px;
-  color: rgba(245, 241, 232, 0.5);
-  transition: border-color 0.25s, color 0.25s;
-  opacity: 0;
-  transform: translateY(6px);
-}
-.s-tag.vis {
-  opacity: 1;
-  transform: translateY(0);
-}
-.s-tag:hover {
-  border-color: var(--mint);
-  color: var(--mint);
-}
-
-/* ABOUT — pinned scroll storytelling */
-#about {
-  height: 100vh;
-  display: flex;
-  align-items: center;
   position: relative;
+  z-index: var(--z-default);
+  display: flex;
+  align-items: center;
+  height: 100svh;
+  padding-block: var(--space-section-sm);
+  background-color: var(--color-background);
+  overflow: hidden;
 }
-.about-progress-rail {
+
+.about__rail {
   position: absolute;
   left: 0;
-  top: 9rem;
-  bottom: 9rem;
+  top: var(--space-section-sm);
+  bottom: var(--space-section-sm);
   width: 1px;
-  background: rgba(245, 241, 232, 0.08);
-  z-index: 2;
+  background-color: var(--color-border);
+  z-index: var(--z-default);
   pointer-events: none;
 }
-.about-progress-fill {
+
+.about__rail-fill {
   position: absolute;
   top: 0;
   left: 0;
   width: 1px;
   height: 0%;
-  background: linear-gradient(to bottom, var(--mint), transparent);
-  box-shadow: 0 0 8px var(--mint);
-  transition: height 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  background-color: var(--color-foreground);
+  transition: height 0.6s var(--ease-soft);
 }
-.about-pinned {
+
+.about__grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6rem;
+  gap: var(--space-3xl);
   width: 100%;
   align-items: center;
 }
-.about-left {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-.about-chapters {
-  position: relative;
-  min-height: 18rem;
-  margin-top: 1rem;
-}
-.about-chapter {
+
+.about__left { position: relative; display: flex; flex-direction: column; }
+
+.about__chapters { position: relative; min-height: 20rem; margin-top: var(--space-xl); }
+
+/*
+  The chapters cross-fade in place, driven by the .is-active class React
+  already puts on one of them — not by a tween.
+
+  This used to be a GSAP fromTo per chapter, which made the whole left column
+  depend on the ticker actually running: the resting state here is opacity 0,
+  so any hitch before the first frame left the section's only copy invisible.
+  React renders .is-active on chapter one during SSR, so as CSS this paints
+  correctly before hydration and without JS at all.
+*/
+.about__chapter {
   position: absolute;
   inset: 0;
   opacity: 0;
   transform: translateY(30px);
   pointer-events: none;
+  transition: opacity var(--duration-base) var(--ease-power4),
+              transform var(--duration-slow) var(--ease-power4);
   will-change: opacity, transform;
 }
-.about-chapter.is-active {
+
+.about__chapter.is-active {
+  opacity: 1;
+  transform: none;
   pointer-events: auto;
 }
-.about-ch-hl {
-  font-size: clamp(2.2rem, 4.5vw, 4rem);
-  font-weight: 900;
-  letter-spacing: -0.04em;
+
+.about__chapter-title {
+  margin-bottom: var(--space-lg);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--text-h3);
+  line-height: 0.896;
   text-transform: uppercase;
-  line-height: 1;
-  color: var(--white);
-  margin-bottom: 1.5rem;
+  color: var(--color-foreground);
 }
-.about-ch-hl em {
-  color: var(--mint);
-  font-style: italic;
-  font-weight: 900;
+
+/*
+  The emphasised word in a chapter headline. Underlined rather than tinted:
+  every accent in the palette lands under 3:1 on ivory, and underline is the
+  system's own emphasis move (nav links, card titles).
+*/
+.about__chapter-title em { font-style: normal; text-decoration: underline; text-underline-offset: 0.08em; }
+
+.about__chapter-body {
+  max-width: 44ch;
+  font-size: var(--text-h5);
+  line-height: 1.5;
+  color: var(--color-foreground-70);
 }
-.about-ch-body {
-  font-size: 1rem;
-  font-weight: 500;
-  line-height: 1.75;
-  color: rgba(245, 241, 232, 0.55);
-  max-width: 42ch;
+
+.about__dots { display: flex; gap: var(--space-sm); margin-top: var(--space-xl); }
+
+.about__dot {
+  width: 24px;
+  height: 2px;
+  background-color: var(--color-border);
+  transition: background-color var(--duration-base) var(--ease-power4),
+              width var(--duration-base) var(--ease-power4);
 }
-.about-chapter-dots {
+
+.about__dot.is-active { width: 44px; background-color: var(--color-foreground); }
+
+.about__right { display: flex; flex-direction: column; align-items: flex-start; }
+
+.about__stats {
   display: flex;
-  gap: 0.6rem;
-  margin-top: 3rem;
+  flex-wrap: wrap;
+  gap: var(--space-2xl);
+  margin-bottom: var(--space-2xl);
+  padding-bottom: var(--space-xl);
+  border-bottom: 1px solid var(--color-border);
+  width: 100%;
 }
-.about-dot {
-  width: 22px;
-  height: 1px;
-  background: rgba(245, 241, 232, 0.12);
-  transition: background 0.3s, width 0.3s;
+
+.about__stat-value {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--text-h3);
+  line-height: 0.896;
+  text-transform: uppercase;
+  color: var(--color-foreground);
 }
-.about-dot.is-active {
-  background: var(--mint);
-  width: 38px;
-  box-shadow: 0 0 8px var(--mint);
+
+.about__stat-label {
+  margin-top: var(--space-xs);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-foreground-55);
 }
-.about-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+
+.about__tags { display: flex; flex-wrap: wrap; gap: var(--space-sm); }
+
+.about__tag {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-sand);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-foreground);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity var(--duration-base) var(--ease-power4),
+              transform var(--duration-base) var(--ease-power4),
+              background-color var(--duration-fast) var(--ease-power4);
 }
+
+.about__tag.is-visible { opacity: 1; transform: translateY(0); }
+.about__tag:hover { background-color: var(--color-sand-hover); }
+
+/*
+  Short viewports: the pinned layout has to fit a whole chapter plus the
+  stats without scrolling inside itself, so the display steps come down.
+*/
 @media (min-width: 901px) and (max-height: 860px) {
-  #about {
-    padding: 4.5rem 4rem;
-  }
-  .about-progress-rail {
-    top: 4.5rem;
-    bottom: 4.5rem;
-  }
-  #about .sec-label {
-    margin-bottom: 2.2rem;
-  }
-  .about-pinned {
-    gap: 4rem;
-  }
-  .about-chapters {
-    min-height: 13rem;
-    margin-top: 0.25rem;
-  }
-  .about-ch-hl {
-    font-size: clamp(1.7rem, 3vw, 2.6rem);
-    margin-bottom: 0.9rem;
-  }
-  .about-ch-body {
-    font-size: 0.88rem;
-    line-height: 1.6;
-  }
-  .about-chapter-dots {
-    margin-top: 1.6rem;
-  }
-  .stats-row {
-    gap: 2rem;
-    margin-bottom: 2rem;
-  }
-  .stat-v {
-    font-size: 2.4rem;
-  }
-  .about-r,
-  .about-right {
-    padding-top: 0;
-  }
+  #about { padding-block: var(--space-2xl); }
+  .about__rail { top: var(--space-2xl); bottom: var(--space-2xl); }
+  .about__chapters { min-height: 14rem; margin-top: var(--space-sm); }
+  .about__chapter-title { font-size: 44px; margin-bottom: var(--space-md); }
+  .about__chapter-body { font-size: var(--text-body); line-height: 1.5; }
+  .about__stat-value { font-size: 44px; }
+  .about__stats { gap: var(--space-xl); margin-bottom: var(--space-lg); }
+  .about__dots { margin-top: var(--space-md); }
 }
 
 @media (min-width: 901px) and (max-height: 720px) {
-  #about {
-    padding: 3rem 4rem;
-  }
-  .about-progress-rail {
-    top: 3rem;
-    bottom: 3rem;
-  }
-  .about-chapters {
-    min-height: 11rem;
-  }
-  .about-ch-hl {
-    font-size: clamp(1.5rem, 2.6vw, 2.2rem);
-  }
-  .stat-v {
-    font-size: 2rem;
-  }
+  .about__chapters { min-height: 12rem; }
+  .about__chapter-title { font-size: 36px; }
+  .about__stat-value { font-size: 36px; }
 }
 
 @media (max-width: 900px) {
-  #about {
-    padding: 4rem 1.25rem;
-  }
-  .about-progress-rail {
-    display: none;
-  }
-  .about-pinned {
-    grid-template-columns: 1fr;
-    gap: 1.75rem;
-  }
-  .about-chapters {
-    position: relative;
-    min-height: 14rem;
-    margin-top: 0.25rem;
-  }
-  .about-chapter {
-    position: absolute;
-    inset: 0;
-  }
-  .about-ch-hl {
-    font-size: clamp(1.6rem, 8vw, 2.6rem);
-    overflow-wrap: anywhere;
-    hyphens: auto;
-    margin-bottom: 0.75rem;
-  }
-  .about-ch-body {
-    overflow-wrap: anywhere;
-    max-width: none;
-    font-size: 0.9rem;
-    line-height: 1.55;
-  }
-  .about-chapter-dots {
-    margin-top: 1.5rem;
-  }
-  #about .sec-label {
-    margin-bottom: 1.5rem;
-  }
-  .stats-row {
-    gap: 1.25rem;
-    margin-bottom: 1.25rem;
-    flex-wrap: wrap;
-  }
-  .stat-v {
-    font-size: 1.9rem;
-  }
-  .stat-l {
-    font-size: 0.55rem;
-    letter-spacing: 0.16em;
-  }
-  .s-tag {
-    font-size: 0.55rem;
-    padding: 0.32rem 0.65rem;
-  }
+  #about { padding-block: var(--space-2xl); }
+  .about__rail { display: none; }
+  .about__grid { grid-template-columns: 1fr; gap: var(--space-xl); }
+  .about__chapters { min-height: 15rem; margin-top: var(--space-sm); }
+  .about__chapter-title { font-size: 32px; overflow-wrap: anywhere; }
+  .about__chapter-body { font-size: var(--text-body); max-width: none; }
+  .about__stats { gap: var(--space-lg); margin-bottom: var(--space-lg); }
+  .about__stat-value { font-size: 32px; }
 }
 
-/* EXPERIENCE */
-#experience {
-  background: var(--cream);
-  color: var(--forest);
-  overflow: hidden;
-}
-#exp-inner {
-  padding: 6rem 4rem 2rem;
-}
-#exp-inner .sec-label-num {
-  color: var(--orange);
-}
-#exp-inner .sec-label-text {
-  color: rgba(9, 26, 18, 0.45);
-}
-#exp-inner .sec-label-rule {
-  background: rgba(9, 26, 18, 0.2);
-}
-#exp-inner .sec-ttl {
-  color: var(--forest);
-  margin-bottom: 0;
-}
-#exp-track-outer {
-  overflow: hidden;
-  position: relative;
-}
-#exp-track {
-  display: flex;
-  will-change: transform;
-  padding: 4rem 4rem 6rem;
-}
-.exp-card {
-  flex-shrink: 0;
-  width: min(520px, 80vw);
-  margin-right: 3rem;
-  background: var(--forest);
-  color: var(--white);
-  border-radius: 12px;
-  padding: 3rem;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: 420px;
-  opacity: 0;
-  transform: translateX(50px);
-  transition: opacity 0.7s, transform 0.7s;
-}
-.exp-card.vis {
-  opacity: 1;
-  transform: translateX(0);
-}
-.exp-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    ellipse at top right,
-    rgba(61, 255, 160, 0.07) 0%,
-    transparent 60%
-  );
-  pointer-events: none;
-}
-.exp-card-num {
-  font-size: 6rem;
-  font-weight: 900;
-  letter-spacing: -0.05em;
-  line-height: 1;
-  color: rgba(61, 255, 160, 0.06);
-  position: absolute;
-  top: 1.5rem;
-  right: 2rem;
-}
-.exp-card-period {
-  font-size: 0.62rem;
-  font-weight: 900;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--mint);
-  margin-bottom: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-.exp-card-period::before {
-  content: "";
-  width: 20px;
-  height: 1px;
-  background: var(--mint);
-}
-.exp-card-role {
-  font-size: 1.6rem;
-  font-weight: 900;
-  letter-spacing: -0.025em;
-  line-height: 1.1;
-  margin-bottom: 0.3rem;
-}
-.exp-card-co {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: rgba(245, 241, 232, 0.38);
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid rgba(245, 241, 232, 0.08);
-}
-.exp-card-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-  flex: 1;
-}
-.exp-card-list li {
-  font-size: 0.82rem;
-  font-weight: 500;
-  line-height: 1.65;
-  color: rgba(245, 241, 232, 0.65);
-  padding-left: 1.1rem;
-  position: relative;
-}
-.exp-card-list li::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0.6em;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--orange);
-}
-.exp-progress {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(245, 241, 232, 0.08);
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-.exp-progress-bar {
-  height: 1px;
-  flex: 1;
-  background: rgba(245, 241, 232, 0.1);
-  position: relative;
-  overflow: hidden;
-}
-.exp-progress-fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  background: var(--mint);
-  transition: width 0.4s;
-}
-.exp-card-hint {
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: rgba(245, 241, 232, 0.25);
-}
-.exp-scroll-hint {
-  display: flex;
-  align-items: center;
+/* ------------------------------------------------------------- portfolio */
 
-  gap: 1rem;
-  padding: 0 4rem 4rem;
-  color: rgba(9, 26, 18, 0.4);
-}
-.exp-scroll-hint span {
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-.exp-scroll-arrow {
-  display: flex;
-  gap: 0.3rem;
-}
-.exp-scroll-arrow i {
-  width: 20px;
-  height: 1px;
-  background: currentColor;
-  display: block;
-  transform-origin: left;
-  animation: arr 1.8s ease-in-out infinite;
-}
-.exp-scroll-arrow i:nth-child(2) {
-  animation-delay: 0.2s;
-  width: 14px;
-}
-@keyframes arr {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scaleX(1);
-  }
-  50% {
-    opacity: 0.3;
-    transform: scaleX(0.6);
-  }
-}
-/*  */
-.proj-list {
-  margin-top: 0.5rem;
-}
-.proj-row {
-  border-top: 1px solid rgba(245, 241, 232, 0.07);
-  padding: 0 4rem;
-  position: relative;
-  overflow: hidden;
-  transition: background 0.35s;
-}
-.proj-row:last-child {
-  border-bottom: 1px solid rgba(245, 241, 232, 0.07);
-}
-.proj-row:hover {
-  background: rgba(9, 26, 18, 0.55);
-}
-.proj-inner {
-  display: grid;
-  grid-template-columns: 70px 1fr auto;
-  align-items: center;
-  gap: 2rem;
-  padding: 2.4rem 0;
-  transition: transform 0.3s;
-}
-.proj-n {
-  font-size: 0.82rem;
-  font-weight: 900;
-  letter-spacing: 0.1em;
-  color: var(--orange);
-}
-.proj-name {
-  font-size: clamp(1.5rem, 3.2vw, 2.9rem);
-  font-weight: 900;
-  letter-spacing: -0.03em;
-  line-height: 1;
-  text-transform: uppercase;
-}
-.proj-arrow {
-  font-size: 1.5rem;
-  font-weight: 900;
-  opacity: 0;
-  transform: translateX(-8px);
-  transition: opacity 0.3s, transform 0.3s;
-  color: var(--mint);
-}
-.proj-row:hover .proj-arrow {
-  opacity: 1;
-  transform: translateX(0);
-}
-.proj-preview {
-  position: absolute;
-  right: 4rem;
-  top: 50%;
-  transform: translateY(-50%) scale(0.9);
-  width: 270px;
-  height: 172px;
-  border-radius: 8px;
-  overflow: hidden;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.4s, transform 0.4s;
-  border: 1px solid rgba(61, 255, 160, 0.12);
-}
-.proj-row:hover .proj-preview {
-  opacity: 1;
-  transform: translateY(-50%) scale(1);
-}
-.proj-prev-inner {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 1rem;
-  background: repeating-linear-gradient(
-    45deg,
-    rgba(61, 255, 160, 0.025) 0,
-    rgba(61, 255, 160, 0.025) 1px,
-    transparent 1px,
-    transparent 10px
-  );
-}
-.pp-label {
-  font-size: 0.63rem;
-  font-weight: 900;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: rgba(245, 241, 232, 0.45);
-}
-
-/* STACK CARDS */
 /*
-  Scoped to the stack-cards root rather than #projects: both that section and
-  the 3D carousel answer to that id (whichever one page.tsx has switched on),
-  and as an id selector this used to win over the carousel's own height.
+  Everything from here down is section chrome that sits on top of the
+  primitives above. The 3D carousel keeps its own block further down.
 */
+
+/* ---------------------------------------------------------- stack cards */
+
 .sc-section {
-  height: 100vh;
   position: relative;
-  background: var(--black);
+  height: 100svh;
+  background-color: var(--color-primary);
 }
 
 .sc-wrap {
@@ -1023,415 +1272,416 @@ nav.hidden {
   inset: 0;
   margin: auto;
   width: calc(100% - 50px);
-  height: calc(100vh - 50px);
-  border-radius: 20px;
-  border: 1px solid rgba(245, 241, 232, 0.06);
+  height: calc(100svh - 50px);
+  border-radius: var(--radius-3xl);
   overflow: hidden;
   will-change: transform, opacity;
 }
 
+/* the product-card blocks MASTER.md names; the tone comes from the data */
+.sc-card--yellow { background-color: var(--color-yellow); }
+.sc-card--green  { background-color: var(--color-green); }
+.sc-card--red    { background-color: var(--color-accent); }
+
 .sc-card-body {
   position: relative;
-  z-index: 1;
-  padding: 3.5rem;
-  height: 100%;
+  z-index: var(--z-default);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  height: 100%;
   max-width: 60%;
+  padding: var(--space-2xl);
 }
 
-.sc-card-head {
-  display: flex;
-  align-items: center;
-}
-
-.sc-card-label {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-}
+.sc-card-head { display: flex; align-items: center; }
+.sc-card-label { display: flex; align-items: center; gap: var(--space-md); }
 
 .sc-card-num {
-  font-size: 0.72rem;
-  font-weight: 900;
+  font-size: 0.75rem;
+  font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
+  color: var(--color-foreground);
 }
 
 .sc-card-rule {
   display: block;
-  width: 28px;
-  height: 1px;
-  opacity: 0.35;
   flex-shrink: 0;
+  width: 44px;
+  height: 1px;
+  background-color: var(--color-foreground);
+  opacity: 0.4;
 }
 
 .sc-card-section {
-  font-size: 0.68rem;
-  font-weight: 800;
+  font-size: 0.72rem;
+  font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(245, 241, 232, 0.28);
+  color: var(--color-foreground-55);
 }
 
 .sc-card-content {
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-direction: column;
   justify-content: center;
-  gap: 1rem;
+  gap: var(--space-md);
 }
 
+/* white display type is legal here: Veneer, uppercase, well past 48px */
 .sc-card-title {
-  font-size: clamp(2.8rem, 6vw, 5.5rem);
-  font-weight: 900;
-  letter-spacing: -0.04em;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(48px, 6vw, 96px);
+  line-height: 0.9;
   text-transform: uppercase;
-  line-height: 1;
-  color: var(--white);
-}
-
-@media (min-width: 1366px) and (max-width: 1440px) {
-  .sc-card-title {
-    font-size: clamp(2.4rem, 3.4vw, 3.4rem);
-  }
-}
-
-@media (max-width: 900px) {
-  .sc-card-title {
-    font-size: clamp(1.5rem, 6vw, 2.2rem);
-    
-    overflow-wrap: anywhere;
-  }
+  color: var(--color-white);
 }
 
 .sc-card-tag {
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  opacity: 0.72;
+  text-transform: uppercase;
+  color: var(--color-foreground);
 }
 
 .sc-card-desc {
-  font-size: clamp(0.9rem, 1.2vw, 1.05rem);
-  line-height: 1.55;
-  max-width: 54ch;
-  font-weight: 500;
-  opacity: 0.78;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  max-width: 54ch;
+  font-size: var(--text-body);
+  line-height: 1.5;
+  color: var(--color-foreground);
 }
 
 .sc-card-foot {
   display: flex;
   flex-direction: column;
-  gap: 1.4rem;
   align-items: flex-start;
+  gap: var(--space-md);
 }
 
-.sc-card-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.85rem;
-  padding: 0.45rem 0.5rem 0.45rem 1.25rem;
-  border-radius: 10px;
-  background: #fff;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  text-transform: none;
-  text-decoration: none;
-  transition: transform 0.25s, box-shadow 0.25s;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-}
-
-.sc-card-cta-text {
-  line-height: 1;
-}
-
-.sc-card-cta-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  color: #fff;
-  flex-shrink: 0;
-  transition: transform 0.3s;
-}
-
-.sc-card-cta:hover {
-  /* transform: translateY(-2px); */
-  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.14);
-}
-
-
-.sc-card-cta:hover .sc-card-cta-icon {
-  transform: translateX(2px);
-}
-
-.sc-card-sublinks {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
+.sc-card-sublinks { display: flex; flex-direction: column; gap: var(--space-sm); }
 
 .sc-card-sublinks a {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.78rem;
+  gap: var(--space-sm);
+  font-size: 0.85rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-decoration: none;
-  opacity: 0.7;
-  transition: opacity 0.2s, transform 0.2s;
+  color: var(--color-foreground);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: opacity var(--duration-fast) var(--ease-power4);
+  opacity: 0.75;
 }
 
-.sc-card-sublinks a:hover {
-  opacity: 1;
-  transform: translateX(3px);
-}
+.sc-card-sublinks a:hover { opacity: 1; }
 
 .sc-card-img {
   position: absolute;
   top: 50%;
   right: clamp(2rem, 4vw, 4rem);
+  z-index: 0;
   width: 32%;
   max-width: 460px;
   aspect-ratio: 4 / 5;
   object-fit: cover;
-  border-radius: 14px;
-  background: rgba(0, 0, 0, 0.08);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.22);
+  border-radius: var(--radius-2xl);
+  background-color: var(--color-border);
   transform: translateY(-50%) rotate(2deg);
-  z-index: 0;
   pointer-events: none;
 }
 
 .sc-card-ghost {
   position: absolute;
+  right: var(--space-lg);
   bottom: -0.12em;
-  right: 1.5rem;
+  z-index: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
   font-size: clamp(7rem, 20vw, 16rem);
-  font-weight: 900;
-  letter-spacing: -0.06em;
   line-height: 1;
-  color: rgba(245, 241, 232, 0.022);
+  text-transform: uppercase;
+  color: var(--color-border-onblock);
+  opacity: 0.14;
   pointer-events: none;
   user-select: none;
-  z-index: 0;
 }
 
-.sc-card-img-inline {
-  display: none;
-}
+.sc-card-img-inline { display: none; }
 
 @media (max-width: 768px) {
   .sc-card {
     width: calc(100% - 48px);
-    height: calc(100vh - 96px);
-    border-radius: 16px;
+    height: calc(100svh - 96px);
+    border-radius: var(--radius-2xl);
   }
-
-  .sc-card-body {
-    padding: 1.75rem;
-    max-width: 100%;
-  }
-
-  .sc-card-img {
-    display: none;
-  }
-
+  .sc-card-body { padding: var(--space-lg); max-width: 100%; }
+  .sc-card-title { font-size: clamp(32px, 9vw, 56px); overflow-wrap: anywhere; }
+  .sc-card-img { display: none; }
   .sc-card-img-inline {
     display: block;
+    flex-shrink: 0;
     width: auto;
     height: clamp(120px, 22vh, 220px);
     aspect-ratio: 4 / 5;
     object-fit: cover;
-    margin: 1rem auto 0;
-    border-radius: 12px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
-    flex-shrink: 0;
+    margin: var(--space-md) auto 0;
+    border-radius: var(--radius-sm);
   }
 }
 
 /*
-  Worst-case card (#02 with 4 sublinks) needs ~520px for header+title+desc+sublinks
-  plus padding before any image height. On viewports shorter than ~620px there
-  isn't enough room for even a 120px-tall image, so suppress it.
+  The worst-case card needs ~520px for its copy before any image height. On
+  viewports shorter than ~620px there is no room for even a 120px thumbnail.
 */
 @media (max-width: 768px) and (max-height: 620px) {
-  .sc-card-img-inline {
-    display: none;
-  }
+  .sc-card-img-inline { display: none; }
 }
 
+/* --------------------------------------------------------------- contact */
 
-/* CONTACT */
+/*
+  One panel, one colour. The section carries no ground of its own — its dome
+  and the body below it are both yellow, which is what lets the arc read as
+  the yellow rising into the page rather than a shape drawn on top of it.
+*/
 #contact {
-  background: var(--forest);
-  padding: 9rem 4rem;
-  overflow: hidden;
-}
-#contact .sec-label-num {
-  color: var(--orange);
-}
-#contact .sec-label-text {
-  color: rgba(245, 241, 232, 0.35);
-}
-#contact .sec-label-rule {
-  background: rgba(245, 241, 232, 0.12);
-}
-.contact-hl {
-  font-size: clamp(3.5rem, 9.5vw, 9rem);
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  text-transform: uppercase;
-  line-height: 0.92;
-  color: var(--white);
-  margin-bottom: 4rem;
-}
-.contact-hl em {
-  font-style: italic;
-  color: var(--coral);
-  font-weight: 800;
-}
-.cta-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.8rem;
-  text-decoration: none;
-  font-size: 1.1rem;
-  font-weight: 900;
-  letter-spacing: -0.01em;
-  color: var(--white);
-  border-bottom: 2px solid rgba(245, 241, 232, 0.3);
-  padding-bottom: 0.2rem;
-  transition: color 0.25s, border-color 0.25s, gap 0.3s;
-}
-.cta-link:hover {
-  color: var(--mint);
-  border-color: var(--mint);
-  gap: 1.4rem;
-}
-.socials {
-  display: flex;
-  gap: 2rem;
-  margin-top: 3.5rem;
-}
-.soc-a {
-  font-size: 0.68rem;
-  font-weight: 900;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(245, 241, 232, 0.38);
-  text-decoration: none;
-  transition: color 0.25s;
-}
-.soc-a:hover {
-  color: var(--mint);
+  position: relative;
+  z-index: var(--z-default);
 }
 
-/* FOOTER */
-footer {
-  background: var(--black);
-  border-top: 1px solid rgba(245, 241, 232, 0.06);
-  padding: 1.8rem 4rem;
+.contact__body {
+  position: relative;
+  z-index: var(--z-default);
+  padding-inline: var(--page-inset);
+  padding-bottom: var(--space-xl);
+  background-color: var(--color-yellow);
+}
+
+/*
+  Ink, not the white the system allows for display type at this size: white on
+  yellow is 1.5:1, ink is 10:1. The emphasised word is underlined instead of
+  tinted — nothing in the palette clears 3:1 against yellow.
+*/
+.contact__headline {
+  margin-bottom: var(--space-lg);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(40px, 7.6vw, 156px);
+  line-height: 0.90;
+  text-transform: uppercase;
+  color: var(--color-foreground);
+}
+
+
+.contact__headline em {
+  font-style: normal;
+  text-decoration: underline;
+  text-underline-offset: 0.06em;
+}
+
+.contact__lead {
+  max-width: 46ch;
+  margin-bottom: var(--space-2xl);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  color: var(--color-foreground);
+}
+
+.contact__grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: var(--space-2xl);
+  align-items: start;
+  padding-bottom: var(--space-xl);
+}
+
+/*
+  With the form parked the headline and lead move into the left column and the
+  details keep the right rail, so the panel still reads as two columns instead
+  of one tall stack against an empty right half.
+
+  The rail is pushed to the bottom of the row: the email then lands level with
+  the lead rather than floating up beside the headline, and the two blocks
+  share a baseline across the gap.
+*/
+.contact__grid--noform {
+  grid-template-columns: 1.15fr 1fr;
+  align-items: end;
+}
+
+.contact__grid--noform .contact__lead { margin-bottom: 0; }
+
+/* stacked below 900px (see the breakpoint block), so the lead needs its gap back */
+@media (max-width: 900px) {
+  .contact__grid--noform .contact__lead { margin-bottom: var(--space-xl); }
+}
+
+.contact__form { display: flex; flex-direction: column; gap: var(--space-md); }
+
+/* the two pill inputs sit side by side at desktop, stack on a phone */
+.contact__row { display: flex; gap: var(--space-md); align-items: stretch; }
+.contact__row .input { flex: 1 1 auto; }
+
+.contact__submit { display: flex; }
+
+.contact__note { font-size: 0.85rem; color: var(--color-foreground-70); }
+
+.contact__details {
   display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  text-align: right;
+}
+
+.contact__detail-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-foreground-55);
+}
+
+.contact__detail-value {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--text-h4);
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--color-foreground);
+  overflow-wrap: anywhere;
+}
+
+/* underline, not a colour change: nothing in the palette clears 3:1 on yellow */
+a.contact__detail-value:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.1em;
+}
+
+.contact__socials {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-md);
+}
+
+.contact__social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-circle);
+  background-color: var(--color-foreground);
+  color: var(--color-yellow);
+  transition: opacity var(--duration-base) var(--ease-power4);
+}
+
+.contact__social-link:hover { opacity: 0.75; }
+
+/*
+  The rule above the legal row draws itself out from the centre, so it is an
+  element of its own rather than a border — a border-top has no width to
+  animate, and a pseudo-element can only be reached through a custom property.
+  It is out of flow, so the two legal lines still sit either end of the row.
+
+  scaleX from a centre origin rather than an animated width: it runs on the
+  compositor and costs no layout pass per frame.
+*/
+.contact__legal {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  align-items: center;
-}
-.ft-l,
-.ft-r {
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: rgba(245, 241, 232, 0.3);
+  gap: var(--space-md);
+  padding-top: var(--space-lg);
+  color: var(--color-foreground);
+  font-size: var(--text-body);
 }
 
-/* SPLIT TEXT */
-.sw-wrap {
-  overflow: hidden;
-  display: inline-block;
-  vertical-align: bottom;
-}
-.sw {
-  display: inline-block;
-  transform: translateY(115%) skewY(4deg);
-  will-change: transform;
-}
-
-/* FADE-UP utility */
-.fade-up {
-  opacity: 0;
-  transform: translateY(26px);
-  transition: opacity 0.7s, transform 0.7s;
-}
-.fade-up.vis {
-  opacity: 1;
-  transform: translateY(0);
+.contact__legal-rule {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--color-border-onblock);
+  transform-origin: 50% 50%;
 }
 
 @media (max-width: 900px) {
-  nav {
-    padding: 1.4rem 1.5rem;
-  }
-  .nav-links {
-    display: none;
-  }
-  #hero,
-  #about,
-  #exp-inner,
-  #contact,
-  footer {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
+  .contact__lead { margin-bottom: var(--space-2xl); }
+  .contact__grid { grid-template-columns: 1fr; gap: var(--space-2xl); }
+  .contact__row { flex-direction: column; }
+  .contact__details { text-align: left; }
+  .contact__socials { justify-content: flex-start; }
+  .contact__social-link { width: 60px; height: 60px; }
+}
 
-  .about-grid {
-    
-    grid-template-columns: 1fr;
-    gap: 3rem;
-  }
-  #exp-track {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
-  .proj-row {
-    padding: 0 1.5rem;
-  }
-  .proj-inner {
-    grid-template-columns: 44px 1fr auto;
-    gap: 0.8rem;
-  }
-  .proj-preview {
-    display: none;
-  }
-  .contact-hl {
-    font-size: clamp(2.8rem, 9vw, 5rem);
-  }
+/* ------------------------------------------------------------ utilities */
+
+/*
+  Split heading. Every word gets a box of its own and rises into it from
+  below — see SplitWords.tsx.
+
+  Resting state is unmasked and untransformed, so a page whose script never
+  runs still shows its headings. SplitWords writes the mask and the offset
+  before the first paint.
+
+  The clip is a clip-path, not overflow, for two reasons.
+
+  It insets per side. The mask has to be tight along the baseline, which is
+  where the word arrives from, but the display type here is set at 0.84–0.9
+  leading and Veneer's caps stand well proud of their own line box — a
+  four-sided clip shears the tops off every word. The bleed only opens the
+  top and the sides.
+
+  And unlike overflow it leaves the inline-flex baseline alone: overflow on an
+  inline-flex box moves its baseline to the bottom margin edge, so releasing
+  the mask at the end of the reveal would drop every word by the depth of a
+  descender.
+*/
+.splitted__word {
+  --split-bleed: 0.3em;
+  display: inline-flex;
+}
+
+.splitted__word-wrap {
+  display: inline-flex;
+  will-change: transform;
+}
+
+.splitted__word.is-masked {
+  clip-path: inset(
+    calc(var(--split-bleed) * -1)
+    calc(var(--split-bleed) * -0.5)
+    0
+  );
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* ============================================================
-   PROJECTS 3D — curved-drum WebGL carousel (experimental)
-   Lives alongside .sc-* stack cards; neither replaces the other.
+   PROJECTS 3D — curved-drum WebGL carousel
    ============================================================ */
-/*
-  Full-bleed canvas with the chrome floating over it — the drum needs the
-  whole section height, otherwise a stacked layout squeezes it flat.
-*/
-/*
-  The track is the scroll distance; the section sticks to the top of the
-  viewport for its whole length. Height must match the viewport exactly —
-  anything taller pushes the section's own footer below the fold.
-*/
+
 .p3d-track {
   position: relative;
   /*
@@ -1454,60 +1704,65 @@ footer {
   top: 0;
   height: 100svh;
   overflow: hidden;
-  background: var(--black);
+  /*
+    Red, not olive. The nav toggle is olive and fixed on top of every panel,
+    so on an olive ground it disappeared entirely — the two were the same
+    value. Red also lifts ink from 4.93:1 to 5.51:1 for everything set on it.
+  */
+  background-color: var(--color-accent);
   isolation: isolate;
 }
 
-.p3d-section::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: -30%;
-  width: 120vmax;
-  height: 90vmax;
-  transform: translateX(-50%);
-  background: radial-gradient(
-    closest-side,
-    rgba(61, 255, 160, 0.07),
-    transparent 70%
-  );
-  pointer-events: none;
-  z-index: 0;
-}
-
+/* just the drag hint now — the drum's own oversized word names the section */
 .p3d-head {
   position: absolute;
-  top: 2rem;
-  left: clamp(1.5rem, 4vw, 4rem);
-  right: clamp(1.5rem, 4vw, 4rem);
+  top: var(--space-xl);
+  left: var(--page-inset);
+  right: var(--page-inset);
   z-index: 3;
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
+  justify-content: flex-end;
+  gap: var(--space-md);
   font-size: 0.72rem;
-  letter-spacing: 0.18em;
+  font-weight: 700;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(245, 241, 232, 0.5);
+  color: var(--color-foreground);
 }
 
-.p3d-hint {
-  color: rgba(245, 241, 232, 0.32);
-}
+/*
+  Full-strength ink: the hint is the only thing left in the header, so the
+  muted tone bought no hierarchy and cost contrast — 3.47:1 against red,
+  under the bar for text this small. At full strength it reads 5.51:1.
+*/
+.p3d-hint { color: var(--color-foreground); font-weight: 400; }
 
+/*
+  The ghost word behind the drum. White Veneer on olive is ~3.1:1 — legal
+  because it is display type at 48px and up, and it is aria-hidden besides:
+  every word in it is repeated in the visible chrome below.
+*/
 .p3d-word {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -58%);
-  margin: 0;
   z-index: 0;
-  font-size: clamp(5rem, 19vw, 17rem);
-  font-weight: 900;
-  line-height: 0.82;
-  letter-spacing: -0.045em;
+  margin: 0;
+  transform: translate(-50%, -58%);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(80px, 19vw, 280px);
+  line-height: 0.84;
+  text-transform: uppercase;
   white-space: nowrap;
-  color: rgba(245, 241, 232, 0.14);
+  color: var(--color-border-onblock);
+  /*
+    0.58, not 0.5. Red is the lighter ground, so white at the old strength
+    read 1.70:1 against it where it had 1.88:1 on olive — the ghost had all
+    but disappeared. This puts its presence back where it was.
+  */
+  opacity: 0.58;
   pointer-events: none;
   user-select: none;
 }
@@ -1519,22 +1774,13 @@ footer {
   outline: none;
   touch-action: pan-y;
   opacity: 0;
-  transition: opacity 0.6s ease;
-  cursor: url("/images/cursor-pointer-70.svg") 8 4, grab;
+  transition: opacity 0.6s var(--ease-power4);
+  cursor: grab;
 }
 
-.p3d-stage.is-ready {
-  opacity: 1;
-}
-
-.p3d-stage.is-dragging {
-  cursor: grabbing;
-}
-
-.p3d-stage:focus-visible {
-  outline: 1px solid rgba(61, 255, 160, 0.5);
-  outline-offset: 4px;
-}
+.p3d-stage.is-ready { opacity: 1; }
+.p3d-stage.is-dragging { cursor: grabbing; }
+.p3d-stage:focus-visible { box-shadow: var(--shadow-focus); }
 
 .p3d-canvas-host,
 .p3d-canvas {
@@ -1545,41 +1791,103 @@ footer {
   display: block;
 }
 
+/*
+  The CTA over the front panel — and it *is* the pointer there, not a target
+  parked on top of the artwork. A click anywhere on the facing panel already
+  opens the project, so a button to aim at was always redundant; swapping the
+  cursor for the arrow says the same thing without covering the work.
+
+  Ink circle, ivory arrow — the system's icon-circle treatment, the same one
+  the nav toggle and the contact socials use. Solid rather than an outline
+  because the ground behind it is a project screenshot, black UI on one slide
+  and white on the next, and only a filled disc stays legible across both.
+
+  Position comes from --p3d-cursor-x/y, written on pointermove. It sits on
+  `translate` rather than `transform` so that `scale` stays a separate
+  property: the reveal can ease the scale while the position stays untweened,
+  which is the whole trick — an eased cursor trails the pointer and reads as
+  a dropped frame.
+*/
 .p3d-view {
   position: absolute;
-  top: 56%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  left: 0;
   z-index: 3;
-  padding: 0.7rem 1.5rem;
-  border-radius: 999px;
-  border: 1px solid rgba(245, 241, 232, 0.35);
-  background: rgba(6, 6, 6, 0.35);
-  backdrop-filter: blur(6px);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.24em;
-  color: var(--white);
-  text-decoration: none;
-  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-circle);
+  background-color: var(--color-foreground);
+  color: var(--color-background);
+  opacity: 0;
+  translate: calc(var(--p3d-cursor-x, 0px) - 50%) calc(var(--p3d-cursor-y, 0px) - 50%);
+  scale: 0.82;
+  transition: opacity var(--duration-base) var(--ease-power4),
+              scale var(--duration-base) var(--ease-power4);
+  /*
+    It must never eat the click it is advertising, and the canvas under it has
+    to keep receiving every pointermove — the moment it stopped, the circle
+    would freeze and the panel would stop knowing it was hovered.
+  */
+  pointer-events: none;
 }
 
-.p3d-view:hover {
-  background: var(--mint);
-  border-color: var(--mint);
-  color: var(--forest);
+.p3d-stage.is-hovering .p3d-view {
+  opacity: 1;
+  scale: 1;
+}
+
+/* the native arrow would sit inside the circle it was replaced by */
+.p3d-stage.is-hovering { cursor: none; }
+
+/*
+  Under keyboard focus it stops being a cursor: there is no pointer to follow,
+  so it parks in the middle of the stage and behaves like an ordinary control.
+  Without this the section has no keyboard route into a project at all — the
+  canvas click handler cannot be tabbed to.
+*/
+.p3d-view:focus-visible {
+  opacity: 1;
+  scale: 1;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  pointer-events: auto;
+}
+
+/*
+  No pointer to replace on a touch screen, so it parks in the middle and just
+  stands there. Tapping the panel opens the project either way; without this
+  the only visible cue that it does would never appear.
+*/
+@media (hover: none) {
+  .p3d-view {
+    opacity: 1;
+    scale: 1;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .p3d-view { scale: 1; transition: opacity var(--duration-fast) linear; }
 }
 
 .p3d-bar {
   position: absolute;
   bottom: 4.5rem;
   left: 50%;
-  transform: translateX(-50%);
   z-index: 3;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.9rem;
+  gap: var(--space-md);
+  transform: translateX(-50%);
 }
 
 /*
@@ -1590,21 +1898,15 @@ footer {
 .p3d-pill {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
+  gap: var(--space-md);
   width: 366px;
   padding: 0.5rem 1.2rem 0.5rem 0.5rem;
-  border-radius: 999px;
-  border: 1px solid rgba(245, 241, 232, 0.12);
-  background: rgba(245, 241, 232, 0.05);
-  backdrop-filter: blur(10px);
+  border: 1px solid var(--color-border-onblock);
+  border-radius: var(--radius-full);
+  background-color: var(--color-background);
 }
 
-.p3d-roll {
-  position: relative;
-  display: block;
-  overflow: hidden;
-  flex: none;
-}
+.p3d-roll { position: relative; display: block; overflow: hidden; flex: none; }
 
 /*
   Slides stack on top of each other and are placed individually by the render
@@ -1612,25 +1914,13 @@ footer {
   set of cards cover an ever-climbing position, and it means no transition
   here — the loop drives them in step with the drum.
 */
-.p3d-roll-slide {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
+.p3d-roll-slide { position: absolute; inset: 0; overflow: hidden; }
 
-.p3d-roll-thumb {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-}
-
-.p3d-roll-value {
-  flex: 1 1 auto;
-  height: 1.3rem;
-}
+.p3d-roll-thumb { width: 46px; height: 46px; border-radius: var(--radius-circle); }
+.p3d-roll-value { flex: 1 1 auto; height: 1.3rem; }
 
 /*
-  Width covers the 0.9rem padding as well (box-sizing is border-box), plus
+  Width covers the 1.2rem padding as well (box-sizing is border-box), plus
   slack around the text. Sized tight to the digits, a sub-pixel track offset
   leaves a sliver of the neighbouring counter showing at the edge.
 */
@@ -1639,14 +1929,10 @@ footer {
   width: 92px;
   padding-left: 0.9rem;
   margin-left: 0.2rem;
-  border-left: 1px solid rgba(245, 241, 232, 0.14);
+  border-left: 1px solid var(--color-border);
 }
 
-.p3d-thumb {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+.p3d-thumb { width: 100%; height: 100%; object-fit: cover; }
 
 .p3d-meta {
   display: flex;
@@ -1657,22 +1943,22 @@ footer {
 }
 
 .p3d-meta-label {
-  font-size: 0.6rem;
+  font-size: 0.62rem;
+  font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(245, 241, 232, 0.42);
+  color: var(--color-foreground-55);
 }
 
 .p3d-meta-value {
   display: block;
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   line-height: 1.3rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--white);
+  color: var(--color-foreground);
 }
 
 /*
@@ -1688,80 +1974,62 @@ footer {
   line-height: 1rem;
   letter-spacing: 0.12em;
   white-space: nowrap;
-  color: rgba(245, 241, 232, 0.5);
+  color: var(--color-foreground-55);
   font-variant-numeric: tabular-nums;
 }
 
-.p3d-nav {
-  display: flex;
-  gap: 0.5rem;
-}
+.p3d-nav { display: flex; gap: var(--space-sm); }
 
 /*
-  Both directions loop, so neither is the primary one — they share the pill's
-  glass treatment rather than one being a solid call to action.
+  Both directions loop, so neither is the primary one — they share the ink
+  circle treatment the system uses for social and play buttons.
 */
 .p3d-round {
   display: grid;
   place-items: center;
   width: 52px;
   height: 52px;
-  border-radius: 50%;
-  border: 1px solid rgba(245, 241, 232, 0.14);
-  background: rgba(245, 241, 232, 0.05);
-  backdrop-filter: blur(10px);
-  color: var(--white);
-  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  border-radius: var(--radius-circle);
+  background-color: var(--color-foreground);
+  color: var(--color-white);
+  transition: background-color var(--duration-base) var(--ease-power4),
+              opacity var(--duration-base) var(--ease-power4);
 }
 
-.p3d-round:hover:not(:disabled) {
-  background: rgba(61, 255, 160, 0.14);
-  border-color: rgba(61, 255, 160, 0.4);
-  color: var(--mint);
-}
+/* olive, not the red hover: on a red panel that would sink into the ground */
+.p3d-round:hover:not(:disabled) { background-color: var(--color-primary); }
 
 /* the ends of the run — dimmed rather than hidden, so the row keeps its shape */
-.p3d-round:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
+.p3d-round:disabled { opacity: 0.35; cursor: default; }
 
 .p3d-title {
   position: absolute;
   bottom: 1.6rem;
   left: 50%;
-  transform: translateX(-50%);
   z-index: 3;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.8rem;
+  gap: var(--space-md);
   max-width: min(90vw, 640px);
-  font-size: 0.85rem;
-  color: rgba(245, 241, 232, 0.62);
+  transform: translateX(-50%);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-foreground);
   text-align: center;
 }
 
-.p3d-title-num {
-  font-size: 0.7rem;
-  letter-spacing: 0.16em;
-  color: var(--mint);
-}
+.p3d-title-num { font-size: 0.75rem; letter-spacing: 0.16em; color: var(--color-foreground-55); }
 
 .p3d-title a {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  color: inherit;
-  text-decoration: none;
+  gap: var(--space-xs);
   border-bottom: 1px solid transparent;
-  transition: color 0.3s ease, border-color 0.3s ease;
+  transition: border-color var(--duration-base) var(--ease-power4);
 }
 
-.p3d-title a:hover {
-  color: var(--white);
-  border-color: rgba(245, 241, 232, 0.4);
-}
+.p3d-title a:hover { border-color: var(--color-foreground); }
 
 @media (max-width: 900px) {
   /*
@@ -1778,34 +2046,18 @@ footer {
     */
     --p3d-start-hold: 1;
   }
-  .p3d-head {
-    top: 1.5rem;
-  }
-  .p3d-hint {
-    display: none;
-  }
+  .p3d-head { top: var(--space-lg); }
+  .p3d-hint { display: none; }
   /*
     Sits higher than on desktop because the title below it wraps to two lines
     at this width — measured from the bar, not the title, so the gap survives
     whichever of the two a given project needs.
   */
-  .p3d-bar {
-    bottom: 5.2rem;
-    gap: 0.6rem;
-  }
-  .p3d-pill {
-    width: min(260px, calc(100vw - 9rem));
-  }
-  .p3d-roll-count {
-    display: none;
-  }
-  .p3d-round {
-    width: 46px;
-    height: 46px;
-  }
-  .p3d-title {
-    font-size: 0.78rem;
-  }
+  .p3d-bar { bottom: 5.2rem; gap: var(--space-sm); }
+  .p3d-pill { width: min(260px, calc(100vw - 9rem)); }
+  .p3d-roll-count { display: none; }
+  .p3d-round { width: 46px; height: 46px; }
+  .p3d-title { font-size: 0.82rem; }
 }
 
 /*
@@ -1817,9 +2069,7 @@ footer {
 */
 @media (max-width: 600px) {
   /* shorter again on a phone, where a swipe covers less of the page */
-  .p3d-track {
-    --p3d-per-project: 30;
-  }
+  .p3d-track { --p3d-per-project: 30; }
   .p3d-bar {
     left: 0;
     right: 0;
@@ -1829,46 +2079,32 @@ footer {
       here, so this lands on the same ~1.3rem gap above it.
     */
     bottom: calc(3.5rem + env(safe-area-inset-bottom));
-    gap: 0.5rem;
-    padding: 0 1rem;
+    gap: var(--space-sm);
+    padding-inline: var(--space-md);
   }
   .p3d-pill {
     flex: 1 1 auto;
     width: auto;
     min-width: 0;
-    gap: 0.6rem;
+    gap: var(--space-sm);
     padding: 0.4rem 1rem 0.4rem 0.4rem;
   }
-  .p3d-nav {
-    flex: none;
-    gap: 0.4rem;
-  }
-  .p3d-roll-thumb {
-    width: 40px;
-    height: 40px;
-  }
-  .p3d-meta-label {
-    font-size: 0.55rem;
-    letter-spacing: 0.16em;
-  }
-  .p3d-meta-value {
-    font-size: 0.82rem;
-  }
+  .p3d-nav { flex: none; gap: var(--space-xs); }
+  .p3d-roll-thumb { width: 40px; height: 40px; }
+  .p3d-meta-label { font-size: 0.55rem; letter-spacing: 0.16em; }
+  .p3d-meta-value { font-size: 0.85rem; }
   /* 44px is the smallest comfortable touch target */
-  .p3d-round {
-    width: 44px;
-    height: 44px;
-  }
+  .p3d-round { width: 44px; height: 44px; }
   /*
     One line, clipped. Wrapped, a long title climbs into the pill above it and
-    runs wide enough to sit under the fixed badge in the corner; the arrow
-    glyph goes with it, since the whole line is the link anyway.
+    runs wide enough to sit under the fixed nav toggle in the corner; the
+    arrow glyph goes with it, since the whole line is the link anyway.
   */
   .p3d-title {
     bottom: calc(1.1rem + env(safe-area-inset-bottom));
     max-width: calc(100vw - 7.5rem);
-    gap: 0.5rem;
-    font-size: 0.72rem;
+    gap: var(--space-sm);
+    font-size: 0.75rem;
   }
   .p3d-title a,
   .p3d-title > span:last-child {
@@ -1878,13 +2114,8 @@ footer {
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .p3d-title-num {
-    flex: none;
-    font-size: 0.64rem;
-  }
-  .p3d-title a svg {
-    display: none;
-  }
+  .p3d-title-num { flex: none; font-size: 0.66rem; }
+  .p3d-title a svg { display: none; }
 }
 
 /*
@@ -1892,19 +2123,23 @@ footer {
   itself — without this they look inert for the length of the press.
 */
 @media (hover: none) {
-  .p3d-round:active:not(:disabled) {
-    background: rgba(61, 255, 160, 0.14);
-    border-color: rgba(61, 255, 160, 0.4);
-    color: var(--mint);
-  }
+    .p3d-round:active:not(:disabled) { background-color: var(--color-primary); }
 }
+
+/* ------------------------------------------------- reduced motion */
 
 @media (prefers-reduced-motion: reduce) {
-  .p3d-stage {
-    transition: none;
+  html { scroll-behavior: auto; }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
+
+  /* the sweep fill is the whole affordance, so it stays — just instant */
+  .button:hover::after { transform: translateY(0) scale(1.5); }
 }
-
-
-
-

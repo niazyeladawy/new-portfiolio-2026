@@ -16,7 +16,6 @@
     "scrollLabel": "Scroll"
   },
   "about": {
-    "sectionLabel": "About me",
     "stats": [
       {
         "value": "5+",
@@ -94,8 +93,6 @@
     ]
   },
   "contact": {
-    "sectionNum": "04",
-    "sectionLabel": "Get in touch",
     "email": "niazyadawy2@gmail.com",
     "headlineLines": [
       {
@@ -132,10 +129,27 @@
         "href": "https://www.niazyeladawy.com"
       }
     ],
-    "footer": {
-      "left": "Niazy Eladawy",
-      "right": "Dubai, UAE"
-    }
+    "lead": "Got a product that needs to feel as good as it works? I take on a small number of builds a year — send over what you have in mind.",
+    "form": {
+      "note": "I reply to everything within two working days.",
+      "namePlaceholder": "Your name",
+      "emailPlaceholder": "Your email",
+      "messagePlaceholder": "What are you building?",
+      "submitLabel": "Send"
+    },
+    "blocks": [
+      {
+        "label": "Email",
+        "value": "niazyadawy2@gmail.com",
+        "href": "mailto:niazyadawy2@gmail.com"
+      },
+      {
+        "label": "Based in",
+        "value": "Dubai, UAE"
+      }
+    ],
+    "legalLeft": "Niazy Eladawy",
+    "legalRight": "Dubai, UAE"
   },
   "stackCards": {
     "sectionLabel": "Selected work",
@@ -147,10 +161,9 @@
         "description": "Real-time 3D car configurator built with Three.js And Babylon.js. Users customize colors, accessories, and environments — with AR viewing — entirely in the browser, no plugin required.",
         "link": "https://en-eg.magniteconfigurator.com/eg/en/configure/magnite-1-0t-tekna-plus-cvt/viewer?ext=RCA",
         "image": "portfolio/magnite_3d_configurator.png",
-        "bg": "#c44a1f",
-        "accent": "#1a0a02",
         "short": "Magnite",
-        "category": "3D / WebGL"
+        "category": "3D / WebGL",
+        "tone": "yellow"
       },
       {
         "num": "02",
@@ -180,10 +193,9 @@
           }
         ],
         "image": "portfolio/nissan_campaign_microsites.png",
-        "bg": "#d4926b",
-        "accent": "#1f1208",
         "short": "Campaigns",
-        "category": "Microsites"
+        "category": "Microsites",
+        "tone": "green"
       },
       {
         "num": "03",
@@ -191,10 +203,9 @@
         "description": "Full-featured e-commerce system for automotive parts — search, filtering, cart, and checkout — built for performance and cross-browser reliability.",
         "link": "https://parts.nissanghana.com/",
         "image": "portfolio/nissan_parts_ecommerce.png",
-        "bg": "#f0ebe0",
-        "accent": "#060606",
         "short": "Parts",
-        "category": "E-Commerce"
+        "category": "E-Commerce",
+        "tone": "red"
       },
       {
         "num": "04",
@@ -202,10 +213,9 @@
         "description": "Agency website for Alternative built around 3D visual storytelling and immersive motion. Every section designed to hold attention and communicate craft.",
         "link": "https://www.alternative.agency/",
         "image": "portfolio/alternative_agency.png",
-        "bg": "#5fbce5",
-        "accent": "#08192d",
         "short": "Alternative",
-        "category": "Creative Studio"
+        "category": "Creative Studio",
+        "tone": "yellow"
       },
       {
         "num": "05",
@@ -213,10 +223,9 @@
         "description": "Arabic-first marketing site for a multi-tenant SaaS invoicing platform. Focused on clarity, conversion, and building trust with regional business audiences.",
         "link": "https://fatoorah.ai/",
         "image": "portfolio/fatoorah_saas.png",
-        "bg": "#2f8c81",
-        "accent": "#06201d",
         "short": "Fatoorah",
-        "category": "SaaS Product"
+        "category": "SaaS Product",
+        "tone": "green"
       },
       {
         "num": "06",
@@ -224,10 +233,9 @@
         "description": "Vehicle listing platform for Nissan's certified pre-owned inventory — streamlined browsing, smart filtering, and a UX built around purchase confidence.",
         "link": "https://en.nissan-dubai.com/nissan-certified/buy-a-car.html",
         "image": "portfolio/nissan_certified_preowned.png",
-        "bg": "#f0ebe0",
-        "accent": "#060606",
         "short": "Certified",
-        "category": "Listings Platform"
+        "category": "Listings Platform",
+        "tone": "red"
       },
       {
         "num": "07",
@@ -235,10 +243,9 @@
         "description": "Premium landing page with layered scroll animations and a confident visual identity. Built to convert, designed to make an impression.",
         "link": "https://mbrmarketing.me/",
         "image": "portfolio/mbr_marketing.png",
-        "bg": "#ff5b2e",
-        "accent": "#1a0a02",
         "short": "MBR",
-        "category": "Landing Page"
+        "category": "Landing Page",
+        "tone": "yellow"
       }
     ]
   },
@@ -268,5 +275,30 @@
     "viewLabel": "VIEW",
     "categoryLabel": "Category",
     "hint": "Scroll or drag to rotate"
+  },
+  "nav": {
+    "label": "Menu",
+    "links": [
+      {
+        "label": "Home",
+        "href": "#hero"
+      },
+      {
+        "label": "About",
+        "href": "#about"
+      },
+      {
+        "label": "Work",
+        "href": "#projects"
+      },
+      {
+        "label": "Contact",
+        "href": "#contact"
+      }
+    ],
+    "meta": [
+      "Dubai, UAE",
+      "Available for freelance & full-time"
+    ]
   }
 }
