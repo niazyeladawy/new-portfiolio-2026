@@ -3,10 +3,12 @@
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import Button from './Button';
+import Rule from './Rule';
 import SplitWords, { releaseMask } from './SplitWords';
 import data from '../data.json';
 
-const { badge, name, description, roles, cta, ctaHref, scrollLabel } = data.hero;
+const { badge, role, location, name, description, roles, cta, ctaHref, scrollLabel } =
+  data.hero;
 
 interface HeroProps {
   startAnimation?: boolean;
@@ -57,6 +59,7 @@ const Hero = ({ startAnimation = false }: HeroProps) => {
             '.hero__badge',
             '.hero__badge-text',
             '.hero__ticker',
+            '.hero__meta',
             '.hero__desc',
             '.hero__cta',
             '.hero__scroll',
@@ -151,11 +154,32 @@ const Hero = ({ startAnimation = false }: HeroProps) => {
         the top is up, otherwise the name's own tracking tween, which the copy
         starts under rather than waiting out.
       */
+      /*
+        The byline sits above the name but arrives after it — the name is the
+        one big move on this panel and everything else fades in behind it, so
+        leading with the label would spend the opening beat on the smallest
+        thing on screen.
+
+        Labels first and the rule drawing under them, following the order they
+        sit in; 0.9s on expo.out is the contact divider's exact figure.
+      */
+      tl.to(
+        '.hero__meta',
+        { opacity: 1, duration: 0.6, ease: 'power2.out' },
+        SHOW_TOP ? '-=0.2' : '-=1.1'
+      );
+
+      tl.to(
+        '.hero__meta-rule',
+        { scaleX: 1, duration: 0.9, ease: 'expo.out' },
+        '<0.15'
+      );
+
       tl.fromTo(
         '.hero__desc',
         { y: 30 },
         { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' },
-        SHOW_TOP ? '-=0.2' : '-=1.1'
+        '<0.3'
       )
         .fromTo(
           '.hero__cta',
@@ -237,6 +261,23 @@ const Hero = ({ startAnimation = false }: HeroProps) => {
         ) : null}
 
         {/*
+          What the parked badge used to say, split across the ends of its own
+          line — the device the contact panel closes the page with, so the two
+          ends of the page rhyme rather than each inventing a way to set a
+          small label.
+
+          Above the name: it introduces who this is, and a byline reads before
+          the name it belongs to, not after it.
+        */}
+        <p className="hero__meta">
+          {/* out of flow against the top edge, so the two labels still sit either end */}
+          <Rule className="hero__meta-rule" manual />
+
+          <span>{role}</span>
+          <span>{location}</span>
+        </p>
+
+        {/*
           The words use the same split-and-rise as every other heading on the
           page. `manual` hands them to the intro timeline below, where the
           rise is one beat of a longer move; without the intro they fall back
@@ -255,7 +296,12 @@ const Hero = ({ startAnimation = false }: HeroProps) => {
           <p className="hero__desc">{description}</p>
 
           <div className="hero__cta">
-            <Button href={ctaHref} variant="ink">
+            {/*
+              ctaHref is an in-page anchor, so the arrow points down rather
+              than out — and agrees with the scroll cue a few pixels below it
+              instead of contradicting it.
+            */}
+            <Button href={ctaHref} variant="ink" direction="down">
               {cta}
             </Button>
           </div>

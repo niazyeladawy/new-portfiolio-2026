@@ -10,6 +10,7 @@ import {
 import * as THREE from 'three';
 import { ArrowLeft, ArrowRight, ArrowUpRight } from 'lucide-react';
 import SectionDome from './SectionDome';
+import SplitWords from './SplitWords';
 import data from '../data.json';
 
 type Project = {
@@ -30,7 +31,18 @@ const COPY = data.projects3d;
 
 /* ── scene constants ───────────────────────────────────────────── */
 const RADIUS = 3.2;
-const HEIGHT = 1.55;
+/*
+  The panel's shape, taken from the source images rather than chosen: every
+  screenshot in data.json ships at 1920×821, and a panel cut to any other
+  ratio can only cover-fit them — at the old 1.55-high panel that meant
+  cropping 37% off the width of every capture, which is most of the layout the
+  shot was taken to show.
+
+  Width is not ours to pick: it is the arc a project owns on the ring, set by
+  RADIUS, FILL and how many projects there are. So the height is what gives —
+  see `height` in the effect, derived rather than declared.
+*/
+const PANEL_ASPECT = 1920 / 821;
 const PANEL_Y = 0.5;
 const LIFT = 0.26; // camera sits below the drum centre, so reflections get room
 const FILL = 0.8; // slice of each angular step covered by an image
@@ -239,8 +251,14 @@ const ProjectsCarousel3D = () => {
 
     const step = (Math.PI * 2) / count;
     const arc = step * FILL;
-    const panelAspect = (RADIUS * arc) / HEIGHT;
-    const floor = PANEL_Y - HEIGHT / 2;
+    /*
+      Arc length is the panel's width in world units. The height follows from
+      it and PANEL_ASPECT, so a panel is exactly the shape of the image it
+      carries and the cover-fit below has nothing left to crop.
+    */
+    const panelAspect = PANEL_ASPECT;
+    const height = (RADIUS * arc) / panelAspect;
+    const floor = PANEL_Y - height / 2;
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 100);
@@ -278,7 +296,7 @@ const ProjectsCarousel3D = () => {
     const geometry = new THREE.CylinderGeometry(
       RADIUS,
       RADIUS,
-      HEIGHT,
+      height,
       48,
       1,
       true,
@@ -292,11 +310,11 @@ const ProjectsCarousel3D = () => {
     */
     const titleRadius = RADIUS + TITLE_GAP;
     const textArc = (arc * RADIUS) / titleRadius;
-    const titleAspect = (titleRadius * textArc) / HEIGHT;
+    const titleAspect = (titleRadius * textArc) / height;
     const textGeometry = new THREE.CylinderGeometry(
       titleRadius,
       titleRadius,
-      HEIGHT,
+      height,
       48,
       1,
       true,
@@ -337,7 +355,7 @@ const ProjectsCarousel3D = () => {
           uDim: { value: 1 },
           uReflect: { value: reflect ? 1 : 0 },
           uFloor: { value: floor },
-          uSpan: { value: HEIGHT },
+          uSpan: { value: height },
         },
       });
 
@@ -352,12 +370,12 @@ const ProjectsCarousel3D = () => {
 
       /*
         scale.y = -1 mirrors the panel through its own centre; dropping it by
-        HEIGHT lands the copy exactly under the floor line, and MIRROR_GAP
+        height lands the copy exactly under the floor line, and MIRROR_GAP
         pushes it further down so the two read as separate objects rather
         than one seam. The shader fades it out with distance.
       */
       const mirror = new THREE.Mesh(geometry, mirrorMaterial);
-      mirror.position.y = PANEL_Y - HEIGHT - MIRROR_GAP;
+      mirror.position.y = PANEL_Y - height - MIRROR_GAP;
       mirror.scale.y = -1;
       mirror.rotation.y = i * step;
       mirror.renderOrder = -1;
@@ -465,13 +483,13 @@ const ProjectsCarousel3D = () => {
       const half = arc / 2;
       const edgeTan = widthFraction * tanHalfFov * aspect;
       const byWidth = RADIUS * Math.cos(half) + (RADIUS * Math.sin(half)) / edgeTan;
-      const byHeight = RADIUS + HEIGHT / (2 * heightFraction * tanHalfFov);
+      const byHeight = RADIUS + height / (2 * heightFraction * tanHalfFov);
 
       /*
         The view stays level (no tilt); dropping the camera below the drum's
         centre just pushes the drum up the frame and reveals its reflection.
       */
-      const eyeY = PANEL_Y - LIFT * HEIGHT;
+      const eyeY = PANEL_Y - LIFT * height;
       camera.aspect = aspect;
       camera.position.set(0, eyeY, Math.max(byWidth, byHeight, RADIUS + 1.2));
       camera.lookAt(0, eyeY, 0);
@@ -982,7 +1000,7 @@ const ProjectsCarousel3D = () => {
           Keep the gap constant as the (now taller) panel swells, so the
           reflection tracks its bottom edge instead of drifting into it.
         */
-        panel.mirror.position.y = PANEL_Y - HEIGHT * s - MIRROR_GAP;
+        panel.mirror.position.y = PANEL_Y - height * s - MIRROR_GAP;
         /*
           The fade starts at the reflection's own top edge, a gap below the
           panel. It is evaluated in world space, so it has to account for the
@@ -990,8 +1008,8 @@ const ProjectsCarousel3D = () => {
           drifts off the reflection whenever the speed scale kicks in.
         */
         panel.mirrorMaterial.uniforms.uFloor.value =
-          (PANEL_Y - (HEIGHT * s) / 2 - MIRROR_GAP) * drumScale;
-        panel.mirrorMaterial.uniforms.uSpan.value = HEIGHT * s * drumScale;
+          (PANEL_Y - (height * s) / 2 - MIRROR_GAP) * drumScale;
+        panel.mirrorMaterial.uniforms.uSpan.value = height * s * drumScale;
       });
 
       renderer.render(scene, camera);
@@ -1061,14 +1079,28 @@ const ProjectsCarousel3D = () => {
         } as CSSProperties
       }
     >
-    <section className="p3d-section" aria-label={COPY.sectionLabel}>
+    <section className="p3d-section" aria-labelledby="p3d-heading">
+      {/*
+        The section's real heading. The oversized word behind the drum reads
+        as the title but is aria-hidden and set in a ghost tint, so until now
+        the section had no heading at all — only a label on the landmark,
+        which does not appear in a document outline or a headings list.
+
+        It reveals through SplitWords like every other heading on the page.
+        That reveal is driven by an IntersectionObserver rather than a
+        ScrollTrigger, which is what makes it safe here: this section is
+        sticky inside a tall track, so a trigger's measured start would be the
+        fragile part. IO only ever asks whether the words are on screen.
+      */}
       <header className="p3d-head">
-        <span className="p3d-hint">{COPY.hint}</span>
+        <h2 className="p3d-heading" id="p3d-heading">
+          <SplitWords>{COPY.sectionLabel}</SplitWords>
+        </h2>
       </header>
 
-      <h2 className="p3d-word" aria-hidden="true">
+      <p className="p3d-word" aria-hidden="true">
         {COPY.headline}
-      </h2>
+      </p>
 
       <div
         ref={stageRef}
@@ -1186,6 +1218,14 @@ const ProjectsCarousel3D = () => {
           <span>{current.title}</span>
         )}
       </p>
+
+      {/*
+        Moved out of the header and down here: it describes how to work the
+        drum, and the drum's other controls — the arrows, the pill — are on
+        this edge. Opposite the heading it was a caption with nothing to
+        caption.
+      */}
+      <p className="p3d-hint">{COPY.hint}</p>
     </section>
     </div>
     </>

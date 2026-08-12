@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowDown, ArrowUpRight } from 'lucide-react';
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'react';
 
 /*
@@ -11,11 +11,22 @@ import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'reac
 
 type Variant = 'primary' | 'red' | 'ink' | 'secondary';
 
+/*
+  Where the button sends you, which is what the arrow is there to say.
+
+  'out' — the 45° arrow, the system's outbound mark: this leaves the page.
+  'down' — a plain down arrow, for an in-page anchor. The distinction is not
+  decoration; an up-and-right arrow on a link that scrolls the page downward
+  points away from its own destination.
+*/
+type Direction = 'out' | 'down';
+
 type CommonProps = {
   children: ReactNode;
   variant?: Variant;
-  /* the trailing 45° arrow; off for form submits and other terminal actions */
+  /* the trailing arrow; off for form submits and other terminal actions */
   arrow?: boolean;
+  direction?: Direction;
   compact?: boolean;
   className?: string;
 };
@@ -32,46 +43,71 @@ type ButtonAsButton = CommonProps &
 
 type ButtonProps = ButtonAsLink | ButtonAsButton;
 
-const classesFor = (variant: Variant, compact: boolean, extra?: string) =>
-  ['button', `button--${variant}`, compact ? 'button--compact' : '', extra ?? '']
+const classesFor = (
+  variant: Variant,
+  compact: boolean,
+  direction: Direction,
+  extra?: string
+) =>
+  [
+    'button',
+    `button--${variant}`,
+    compact ? 'button--compact' : '',
+    /* the hover nudge has to travel the same way the arrow points */
+    direction === 'down' ? 'button--down' : '',
+    extra ?? '',
+  ]
     .filter(Boolean)
     .join(' ');
 
-const Label = ({ children, arrow }: { children: ReactNode; arrow: boolean }) => (
-  <span className="button__text">
-    {children}
-    {arrow ? (
-      <ArrowUpRight
-        className="button__icon"
-        size={24}
-        strokeWidth={2}
-        aria-hidden="true"
-      />
-    ) : null}
-  </span>
-);
+const Label = ({
+  children,
+  arrow,
+  direction,
+}: {
+  children: ReactNode;
+  arrow: boolean;
+  direction: Direction;
+}) => {
+  const Icon = direction === 'down' ? ArrowDown : ArrowUpRight;
+  return (
+    <span className="button__text">
+      {children}
+      {arrow ? (
+        <Icon className="button__icon" size={24} strokeWidth={2} aria-hidden="true" />
+      ) : null}
+    </span>
+  );
+};
 
 const Button = ({
   children,
   variant = 'red',
   arrow = true,
+  direction = 'out',
   compact = false,
   className,
   ...rest
 }: ButtonProps) => {
+  const classes = classesFor(variant, compact, direction, className);
+
   if (typeof rest.href === 'string') {
     const { href, ...anchorProps } = rest as ButtonAsLink;
     return (
-      <a href={href} className={classesFor(variant, compact, className)} {...anchorProps}>
-        <Label arrow={arrow}>{children}</Label>
+      <a href={href} className={classes} {...anchorProps}>
+        <Label arrow={arrow} direction={direction}>
+          {children}
+        </Label>
       </a>
     );
   }
 
   const { type = 'button', ...buttonProps } = rest as ButtonAsButton;
   return (
-    <button type={type} className={classesFor(variant, compact, className)} {...buttonProps}>
-      <Label arrow={arrow}>{children}</Label>
+    <button type={type} className={classes} {...buttonProps}>
+      <Label arrow={arrow} direction={direction}>
+        {children}
+      </Label>
     </button>
   );
 };

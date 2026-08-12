@@ -7,8 +7,11 @@ import SplitWords, { applyMask, releaseMask } from './SplitWords';
 import data from '../data.json';
 
 const { label, links, meta } = data.nav;
-/* one list of socials for the whole site, so the two places can never drift */
-const { socials } = data.contact;
+/*
+  One list of socials and one address for the whole site, read from the
+  contact panel's own copy, so the two places can never drift.
+*/
+const { socials, email } = data.contact;
 
 /*
   The fixed olive circle and the panel it opens. The panel stays mounted so
@@ -78,7 +81,7 @@ const Nav = () => {
         circle when this runs.
       */
       gsap.set('.nav__social', { scale: 0 });
-      gsap.set('.nav__meta span', { opacity: 0, y: 18 });
+      gsap.set(['.nav__email', '.nav__meta span'], { opacity: 0, y: 18 });
 
       /* the arc gets a head start, so the words rise into an open panel */
       const tl = gsap.timeline({ delay: 0.18 });
@@ -93,6 +96,13 @@ const Nav = () => {
           ease: 'expo.out',
           onComplete: () => releaseMask(panel),
         }
+      );
+
+      /* the address leads the right column, ahead of the icons under it */
+      tl.to(
+        '.nav__email',
+        { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' },
+        '-=0.45'
       );
 
       tl.to(
@@ -150,46 +160,67 @@ const Nav = () => {
         /* hidden from AT while closed; `visibility` alone leaves it announced */
         aria-hidden={!open}
       >
-        <nav aria-label="Main">
-          <ul className="nav__list">
-            {links.map((link) => (
-              <li key={link.href}>
-                <a
-                  className="nav__link"
-                  href={link.href}
-                  tabIndex={open ? undefined : -1}
-                  onClick={close}
-                >
-                  {/* manual: the panel's own timeline drives these, not sight */}
-                  <SplitWords manual>{link.label}</SplitWords>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        {/*
+          Links left, everything you can reach me by right — the panel reads
+          as two columns rather than one stack running down the left edge with
+          the whole right half empty.
+        */}
+        <div className="nav__inner">
+          <nav aria-label="Main">
+            <ul className="nav__list">
+              {links.map((link) => (
+                <li key={link.href}>
+                  <a
+                    className="nav__link"
+                    href={link.href}
+                    tabIndex={open ? undefined : -1}
+                    onClick={close}
+                  >
+                    {/* manual: the panel's own timeline drives these, not sight */}
+                    <SplitWords manual>{link.label}</SplitWords>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
 
-        <ul className="nav__socials">
-          {socials.map((s) => (
-            <li key={s.label}>
-              <a
-                className="nav__social"
-                href={s.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={s.label}
-                tabIndex={open ? undefined : -1}
-              >
-                <SocialIcon name={s.label} />
-              </a>
-            </li>
-          ))}
-        </ul>
+          <div className="nav__aside">
+            {/*
+              The address the contact panel already carries, offered here so
+              the menu is a way out of the page and not only around it.
+            */}
+            <a
+              className="nav__email"
+              href={`mailto:${email}`}
+              tabIndex={open ? undefined : -1}
+            >
+              {email}
+            </a>
 
-        <p className="nav__meta">
-          {meta.map((line) => (
-            <span key={line}>{line}</span>
-          ))}
-        </p>
+            <ul className="nav__socials">
+              {socials.map((s) => (
+                <li key={s.label}>
+                  <a
+                    className="nav__social"
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    tabIndex={open ? undefined : -1}
+                  >
+                    <SocialIcon name={s.label} />
+                  </a>
+                </li>
+              ))}
+            </ul>
+
+            <p className="nav__meta">
+              {meta.map((line) => (
+                <span key={line}>{line}</span>
+              ))}
+            </p>
+          </div>
+        </div>
       </div>
     </>
   );

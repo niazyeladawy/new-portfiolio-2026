@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Button from './Button';
+import Rule from './Rule';
 import SectionDome from './SectionDome';
 import SocialIcon from './SocialIcon';
 import SplitWords from './SplitWords';
@@ -115,28 +116,20 @@ const Contact = () => {
       ),
 
       /*
-        The rule draws out from the middle, and the two lines follow it in.
-        Both watch the same element, so the gap between them is fixed rather
-        than depending on where each one happens to sit.
+        The rule itself is a <Rule>, which owns its own draw — the two lines
+        here follow it in. It holds 1.5s and these 1.85s, both measured from
+        the same sighting, so the gap between them is fixed rather than
+        depending on where each one happens to sit.
 
-        These close the ladder, so they wait out the socials above them: 1.05
-        to start plus three at 0.09 plus the pop itself. Sighting alone would
-        not do it — the legal row clears the bottom of the viewport in the
-        same frame as the rest of the panel, so without the hold it draws
-        while the rail above is still stepping through.
+        That hold is what closes the ladder: the legal row clears the bottom
+        of the viewport in the same frame as the rest of the panel, so left to
+        sighting alone it would draw while the details rail above it is still
+        stepping through.
 
-        No bottom blind spot for these two: the legal row is the last thing on
-        the page, so at full scroll it still sits inside the default one and
-        would never come into sight at all.
+        No bottom blind spot here: the legal row is the last thing on the
+        page, so at full scroll it still sits inside the default one and would
+        never come into sight at all.
       */
-      revealOnSight(
-        root.querySelector('.contact__legal'),
-        q('.contact__legal-rule'),
-        { scaleX: 0 },
-        { scaleX: 1, duration: 0.9, delay: 1.5, ease: 'expo.out' },
-        '0px'
-      ),
-
       revealOnSight(
         root.querySelector('.contact__legal'),
         q('.contact__legal-text'),
@@ -308,7 +301,7 @@ const Contact = () => {
 
         <div className="contact__legal">
           {/* out of flow, so the two lines below still sit either end */}
-          <span className="contact__legal-rule" aria-hidden="true" />
+          <Rule className="contact__legal-rule" delay={1.5} rootMargin="0px" />
 
           <span className="contact__legal-text">
             © {new Date().getFullYear()} {legalLeft}

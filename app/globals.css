@@ -93,8 +93,7 @@
   --duration-slow:   400ms;
 
 
-  
-  
+ 
   /* ---- Layers ---- */
   --z-behind: -1;
   --z-default: 1;
@@ -119,6 +118,19 @@
 
   /* grid: page inset matches the nav toggle's right offset */
   --page-inset: 2.583%;
+
+  /*
+    The nav toggle is fixed over every panel, so its box is a no-go zone for
+    anything a panel puts in its top-right corner. Kept here rather than on
+    the toggle itself because the nav panel's clip origin derives from it too.
+
+    It sits below the hero byline rather than beside it: that row runs the
+    full width and its rule is drawn edge to edge, so there is no corner left
+    to keep clear. 80px is the byline's own block — --space-lg above it, its
+    line, --space-lg under it to the rule — plus air.
+  */
+  --nav-toggle-size: 72px;
+  --nav-toggle-top: 80px;
   --grid-gutter: var(--space-lg);
 
   /* ---- Type scale (see the step-up media queries below) ---- */
@@ -428,6 +440,9 @@ input[type='radio'] {
 
 .button:hover .button__icon { transform: translate(3px, -3px); }
 
+/* an in-page anchor: the nudge follows the arrow down instead of out */
+.button--down:hover .button__icon { transform: translate(0, 3px); }
+
 .button:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 
 /* Primary — on a colored panel: white outline, fills white, label goes ink */
@@ -612,14 +627,14 @@ textarea.input { min-height: 120px; resize: none; }
 
 .nav__toggle {
   position: fixed;
-  top: 35px;
+  top: var(--nav-toggle-top);
   right: var(--page-inset);
   z-index: calc(var(--z-god) + 1);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 72px;
-  height: 72px;
+  width: var(--nav-toggle-size);
+  height: var(--nav-toggle-size);
   border-radius: var(--radius-circle);
   background-color: var(--color-primary);
   cursor: pointer;
@@ -671,8 +686,6 @@ textarea.input { min-height: 120px; resize: none; }
   breakpoint moves and shrinks the button, and the arc has to follow it.
 */
 .nav__panel {
-  --nav-toggle-size: 72px;
-  --nav-toggle-top: 35px;
   --nav-origin-x: calc(100% - var(--page-inset) - var(--nav-toggle-size) / 2);
   --nav-origin-y: calc(var(--nav-toggle-top) + var(--nav-toggle-size) / 2);
 
@@ -682,7 +695,12 @@ textarea.input { min-height: 120px; resize: none; }
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding-inline: var(--page-inset);
+  /*
+    Wider than the page inset the rest of the site uses. The panel is a room
+    of its own rather than a band of the page, and its two columns are pinned
+    to opposite edges — at the page inset they ran right into the margins.
+  */
+  padding-inline: clamp(var(--space-xl), 6vw, 7rem);
   background-color: var(--color-background);
   clip-path: circle(0% at var(--nav-origin-x) var(--nav-origin-y));
   visibility: hidden;
@@ -696,7 +714,56 @@ textarea.input { min-height: 120px; resize: none; }
   transition: clip-path 720ms var(--ease-power4), visibility 0s;
 }
 
+/*
+  Links left, contact right. Ranged along the bottom: the link stack is the
+  taller column by a long way, and aligning the two at the top would leave the
+  address floating beside the first link with nothing under it.
+*/
+.nav__inner {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3xl);
+  width: 100%;
+}
+
 .nav__list { display: flex; flex-direction: column; }
+
+/*
+  The right column. Ranged right so it reads against the panel's own edge, the
+  way the contact panel's details rail does.
+*/
+.nav__aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-xl);
+  text-align: right;
+}
+
+/*
+  The address, in the system's own treatment for it — display face, uppercase,
+  ink, underlined. Not the accent: red on ivory is 2.4:1, under the 3:1 that
+  even display type has to clear, and underline is this system's emphasis move
+  everywhere else for exactly that reason.
+
+  Hover goes olive, matching the nav links opposite, so the two columns behave
+  the same way under the cursor.
+*/
+.nav__email {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--text-h4);
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--color-foreground);
+  text-decoration: underline;
+  text-underline-offset: 0.1em;
+  overflow-wrap: anywhere;
+  transition: color var(--duration-base) var(--ease-power4);
+}
+
+.nav__email:hover { color: var(--color-primary); }
 
 .nav__link {
   display: inline-block;
@@ -721,8 +788,9 @@ textarea.input { min-height: 120px; resize: none; }
 
 .nav__socials {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: var(--space-md);
-  margin-top: var(--space-2xl);
 }
 
 .nav__social {
@@ -739,18 +807,46 @@ textarea.input { min-height: 120px; resize: none; }
 
 .nav__social:hover { background-color: var(--color-primary); }
 
+/* the aside's gap owns the spacing now, so the standing margin goes */
 .nav__meta {
-  margin-top: var(--space-xl);
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: var(--space-lg);
   font-size: var(--text-body);
   color: var(--color-foreground-70);
 }
 
+/*
+  Below this the two columns cannot sit side by side — the links are set in vw
+  and take the width they take. The aside falls under them and ranges left
+  with everything else, since there is no opposite edge left to read against.
+*/
+@media (max-width: 900px) {
+  .nav__inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2xl);
+  }
+  .nav__aside { align-items: flex-start; text-align: left; }
+  .nav__socials,
+  .nav__meta { justify-content: flex-start; }
+
+  /*
+    5vw is a desktop figure — it reads as display type at 1440 and as small
+    print at 400. Once the panel stops being two columns the links have the
+    full width to themselves, so they take it.
+  */
+  .nav__link { font-size: 9vw; }
+}
+
+@media (max-width: 640px) {
+  .nav__link { font-size: 13vw; }
+}
+
 @media (max-width: 767px) {
-  .nav__toggle { top: 10px; width: 60px; height: 60px; }
-  .nav__panel { --nav-toggle-size: 60px; --nav-toggle-top: 10px; }
+  /* one place, and the toggle and the nav's clip origin both follow */
+  :root { --nav-toggle-size: 60px; --nav-toggle-top: 72px; }
   .nav__social { width: 48px; height: 48px; }
 }
 
@@ -804,11 +900,13 @@ textarea.input { min-height: 120px; resize: none; }
   min-height: 100svh;
 
   /*
-    No top padding: with the panel's content ranged along the bottom and
-    nothing above the name, it only ate the height the stacked foot needs to
-    keep the scroll cue above the fold.
+    Enough to lift the byline off the top edge, and no more. It was 0 while
+    nothing sat above the name; the row that sits there now is what this is
+    for. The nav toggle clears it by starting below the rule — see
+    --nav-toggle-top — rather than this panel giving way to the toggle.
   */
-  padding-block: 0;
+  padding-top: var(--space-lg);
+  padding-bottom: 0;
   overflow: hidden;
   background-color: var(--color-secondary);
 }
@@ -872,6 +970,7 @@ textarea.input { min-height: 120px; resize: none; }
   transform: translateX(-8px);
 }
 
+/* drawn from the left as one beat of the badge, not the shared centre rule */
 .hero__badge-line {
   flex: none;
   width: 64px;
@@ -953,7 +1052,59 @@ textarea.input { min-height: 120px; resize: none; }
   align-items: center;
   gap: var(--space-lg);
   padding-top: var(--space-lg);
-  border-top: 1px solid var(--color-border-onblock);
+}
+
+/*
+  The name's byline, above it: role at one end of the line, base at the other.
+  The same construction the contact legal row uses, so the page opens and
+  closes on the same figure.
+
+  Ranged left and right against a hero that is otherwise centred on purpose.
+  Centred it would be a subtitle stacked over a name that is already the
+  loudest thing on the page; pinned to the ends it frames the name instead of
+  queueing behind it, and it picks up the panel's full width the way the rule
+  below does.
+
+  Label scale and --color-foreground-70, matching .hero__scroll further down —
+  the panel's own treatment for small type, rather than a fifth one.
+
+  position/padding-bottom are the rule's: it hangs out of flow off this bottom
+  edge, and the padding is the air between the two.
+*/
+.hero__meta {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-md);
+  width: 100%;
+  padding-bottom: var(--space-lg);
+  margin-bottom: var(--space-xl);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-foreground-70);
+  opacity: 0;
+}
+
+/*
+  The rule under the byline — the hero's one white line, and the same figure
+  the contact legal row uses: a rule and a label at either end of it. Under
+  the labels here rather than over them, so it closes the byline off and sets
+  the name below it apart.
+
+  Out of flow so the two labels keep the ends of the row to themselves, and an
+  element rather than a border-bottom because a border has nothing to scale
+  and so cannot be drawn open.
+*/
+.hero__meta-rule {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: var(--color-border-onblock);
 }
 
 .hero__desc {
@@ -1017,7 +1168,27 @@ textarea.input { min-height: 120px; resize: none; }
 }
 
 @media (max-width: 900px) {
-  #hero { padding-block: calc(var(--space-3xl) * 1.5) 0; }
+  /*
+    No top padding of its own here. It used to run 96px to clear the badge
+    cluster that sat above the name; the byline that replaced it is measured
+    against the nav toggle instead, and 96px dropped it straight into the
+    button's box. The base padding is already right.
+  */
+
+  /*
+    The panel fills rather than stacking against its foot. On a phone the
+    column is a good deal shorter than the viewport, and ranged to the bottom
+    it left the whole top half empty with the byline stranded in the middle of
+    it. space-between pins the byline to the top and the foot to the bottom
+    and puts the name between them, which is the shape the panel already has
+    on a desktop — there the column is tall enough to reach on its own.
+
+    The name's own bottom margin goes with it: the distribution owns the gaps
+    now, and leaving it in only shifts the name off centre.
+  */
+  .hero__inner { justify-content: space-between; }
+  .hero__name { margin-bottom: 0; }
+
   /* the button goes full width here, so the foot's items stop centring */
   .hero__foot { align-items: stretch; gap: var(--space-lg); }
   .hero__scroll { display: none; }
@@ -1031,6 +1202,28 @@ textarea.input { min-height: 120px; resize: none; }
   string is allowed to wrap, and the top cluster keeps clear of the toggle.
 */
 @media (max-width: 640px) {
+  /*
+    The byline has to stay on one line. Wrapped it pushes its rule down into
+    the nav toggle, which is fixed at --nav-toggle-top and cannot move out of
+    the way. Tighter tracking and a step down in size is what buys the room —
+    at 0.72rem/0.2em the two labels together are wider than a 360px screen.
+  */
+  .hero__meta {
+    padding-bottom: var(--space-md);
+    margin-bottom: var(--space-lg);
+    gap: var(--space-sm);
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+  }
+
+  /*
+    18.5vw leaves the longer line at barely half the panel's width on a phone,
+    which reads as a small name in a wide box rather than as the display type
+    it is. 24vw puts "ELADAWY." at about three quarters of the measure — the
+    widest it goes before the full stop starts crowding the edge.
+  */
+  .hero__name { font-size: 24vw; }
+
   .hero__top { padding-right: 72px; }
 
   .hero__badge {
@@ -1613,7 +1806,6 @@ a.contact__detail-value:hover {
   width: 100%;
   height: 2px;
   background-color: var(--color-border-onblock);
-  transform-origin: 50% 50%;
 }
 
 @media (max-width: 900px) {
@@ -1648,6 +1840,15 @@ a.contact__detail-value:hover {
   the mask at the end of the reveal would drop every word by the depth of a
   descender.
 */
+/*
+  The shared hairline (components/Rule.tsx). Everything the rule *is* — width,
+  height, colour — belongs to the caller's own class; what lives here is the
+  one property the gesture depends on. Drawing from the centre is why the two
+  rules on the page read as the same move, and it is set in CSS rather than in
+  the tween so the rest state is right whether or not the script ever runs.
+*/
+.rule { transform-origin: 50% 50%; }
+
 .splitted__word {
   --split-bleed: 0.3em;
   display: inline-flex;
@@ -1713,7 +1914,7 @@ a.contact__detail-value:hover {
   isolation: isolate;
 }
 
-/* just the drag hint now — the drum's own oversized word names the section */
+/* the section heading, top left — the drag hint now lives down by the bar */
 .p3d-head {
   position: absolute;
   top: var(--space-xl);
@@ -1722,21 +1923,55 @@ a.contact__detail-value:hover {
   z-index: 3;
   display: flex;
   align-items: baseline;
-  justify-content: flex-end;
   gap: var(--space-md);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
+}
+
+/*
+  Display face, like every other section heading on the page — at label scale
+  it read as a caption rather than a title, which is the one thing a heading
+  cannot afford to do.
+
+  It still tops out well under the ghost word behind the drum: that runs to
+  280px, so at 64px there is no ambiguity about which is the tint and which
+  is the type. Ink at full strength, 5.51:1 on red.
+*/
+.p3d-heading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(32px, 4vw, 64px);
+  font-weight: 400;
+  line-height: 0.9;
   text-transform: uppercase;
   color: var(--color-foreground);
 }
 
 /*
-  Full-strength ink: the hint is the only thing left in the header, so the
-  muted tone bought no hierarchy and cost contrast — 3.47:1 against red,
-  under the bar for text this small. At full strength it reads 5.51:1.
+  The hint sits with the controls it describes. Scrolling and dragging happen
+  at the drum and the arrows are on this edge, so it reads as a caption to
+  them; in the header it was a caption to nothing, parked opposite a heading
+  it had no relationship with.
+
+  Right, not centred: .p3d-title already holds the middle of that line. The
+  two share the 1.6rem offset so the bottom of the panel reads as one row —
+  the project's name in the centre, how to reach the next one at the end of
+  it. The title is capped at 640px, so they cannot meet.
+
+  pointer-events: none so it never interrupts a drag that runs off the bottom
+  of the drum.
 */
-.p3d-hint { color: var(--color-foreground); font-weight: 400; }
+.p3d-hint {
+  position: absolute;
+  bottom: 1.6rem;
+  right: var(--page-inset);
+  z-index: 3;
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-foreground);
+  pointer-events: none;
+}
 
 /*
   The ghost word behind the drum. White Veneer on olive is ~3.1:1 — legal

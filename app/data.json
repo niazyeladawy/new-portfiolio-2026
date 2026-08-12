@@ -1,6 +1,8 @@
 {
   "hero": {
     "badge": "Senior Frontend Developer — Dubai, UAE",
+    "role": "Senior Frontend Developer",
+    "location": "Dubai, UAE",
     "name": {
       "first": "Niazy",
       "last": "Eladawy."
@@ -160,7 +162,7 @@
         "title": "3D Vehicle Configurator — Magnite",
         "description": "Real-time 3D car configurator built with Three.js And Babylon.js. Users customize colors, accessories, and environments — with AR viewing — entirely in the browser, no plugin required.",
         "link": "https://en-eg.magniteconfigurator.com/eg/en/configure/magnite-1-0t-tekna-plus-cvt/viewer?ext=RCA",
-        "image": "portfolio/magnite_3d_configurator.png",
+        "image": "portfolio/carousel/magnite_3d_configurator.png",
         "short": "Magnite",
         "category": "3D / WebGL",
         "tone": "yellow"
@@ -192,7 +194,7 @@
             "href": "https://en.patrolnismo.nissan-dubai.com/"
           }
         ],
-        "image": "portfolio/nissan_campaign_microsites.png",
+        "image": "portfolio/carousel/nissan_campaign_microsites.png",
         "short": "Campaigns",
         "category": "Microsites",
         "tone": "green"
@@ -202,7 +204,7 @@
         "title": "Automotive E-Commerce Platform",
         "description": "Full-featured e-commerce system for automotive parts — search, filtering, cart, and checkout — built for performance and cross-browser reliability.",
         "link": "https://parts.nissanghana.com/",
-        "image": "portfolio/nissan_parts_ecommerce.png",
+        "image": "portfolio/carousel/nissan_parts_ecommerce.png",
         "short": "Parts",
         "category": "E-Commerce",
         "tone": "red"
@@ -212,7 +214,7 @@
         "title": "Creative Studio Website",
         "description": "Agency website for Alternative built around 3D visual storytelling and immersive motion. Every section designed to hold attention and communicate craft.",
         "link": "https://www.alternative.agency/",
-        "image": "portfolio/alternative_agency.png",
+        "image": "portfolio/carousel/alternative_agency.png",
         "short": "Alternative",
         "category": "Creative Studio",
         "tone": "yellow"
@@ -222,7 +224,7 @@
         "title": "SaaS Accounting Platform — Fatoorah",
         "description": "Arabic-first marketing site for a multi-tenant SaaS invoicing platform. Focused on clarity, conversion, and building trust with regional business audiences.",
         "link": "https://fatoorah.ai/",
-        "image": "portfolio/fatoorah_saas.png",
+        "image": "portfolio/carousel/fatoorah_saas.png",
         "short": "Fatoorah",
         "category": "SaaS Product",
         "tone": "green"
@@ -232,7 +234,7 @@
         "title": "Certified Pre-Owned Listings Platform",
         "description": "Vehicle listing platform for Nissan's certified pre-owned inventory — streamlined browsing, smart filtering, and a UX built around purchase confidence.",
         "link": "https://en.nissan-dubai.com/nissan-certified/buy-a-car.html",
-        "image": "portfolio/nissan_certified_preowned.png",
+        "image": "portfolio/carousel/nissan_certified_preowned.png",
         "short": "Certified",
         "category": "Listings Platform",
         "tone": "red"
@@ -242,7 +244,7 @@
         "title": "Marketing Landing Page — MBR",
         "description": "Premium landing page with layered scroll animations and a confident visual identity. Built to convert, designed to make an impression.",
         "link": "https://mbrmarketing.me/",
-        "image": "portfolio/mbr_marketing.png",
+        "image": "portfolio/carousel/mbr_marketing.png",
         "short": "MBR",
         "category": "Landing Page",
         "tone": "yellow"
