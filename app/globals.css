@@ -163,6 +163,7 @@
   font-display: swap;
 }
 
+
 :root {
   /*
     --font-inter and --font-anton are declared by next/font in layout.tsx.
