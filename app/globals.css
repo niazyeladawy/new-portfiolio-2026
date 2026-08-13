@@ -131,6 +131,15 @@
   */
   --nav-toggle-size: 72px;
   --nav-toggle-top: 80px;
+  /*
+    Where it sits once the page has moved past the hero. The 80px above is
+    bought entirely by the byline it has to clear, and a screen down there is
+    no byline left to clear — so it comes up to the margin every other fixed
+    thing on the page would take. Nav.tsx sets .is-nav-raised on <html> and
+    this is what that swaps in; the toggle transitions to it, and the panel's
+    clip origin follows because it is derived from the same value.
+  */
+  --nav-toggle-top-raised: var(--space-lg);
   --grid-gutter: var(--space-lg);
 
   /* ---- Type scale (see the step-up media queries below) ---- */
@@ -209,6 +218,17 @@
 
 html {
   scroll-behavior: smooth;
+  /*
+    The nav panel locks the body while it is open, and body's overflow is what
+    the viewport takes its own from — so the lock takes the scrollbar with it,
+    the page reflows a scrollbar's width wider underneath the open panel, and
+    reflows back the moment it closes. Anything centred in the panel steps
+    sideways or re-wraps on both edges of that.
+
+    Reserving the gutter for good costs nothing on a page this long, which
+    carries a scrollbar at every width anyway, and neither reflow can happen.
+  */
+  scrollbar-gutter: stable;
   /*
     The ground lives on <html>, not <body>, so body::before can sit at
     --z-behind and still paint on top of it. Painting it on body would bury
@@ -719,6 +739,18 @@ textarea.input { min-height: 120px; resize: none; }
 
 /* ------------------------------------------------------------------- nav */
 
+/*
+  A class on <html>, not on the button: --nav-toggle-top is also what the
+  panel's clip origin is built from, so moving the button by its own `top`
+  would leave the arc opening from where the button used to be.
+
+  Higher specificity than the bare :root that declares it, and than the one in
+  the phone breakpoint below, so it wins wherever it is switched on — which is
+  why each breakpoint states its own raised figure rather than its own resting
+  one and hoping for the cascade.
+*/
+html.is-nav-raised { --nav-toggle-top: var(--nav-toggle-top-raised); }
+
 .nav__toggle {
   position: fixed;
   top: var(--nav-toggle-top);
@@ -732,7 +764,14 @@ textarea.input { min-height: 120px; resize: none; }
   border-radius: var(--radius-circle);
   background-color: var(--color-primary);
   cursor: pointer;
-  transition: background-color var(--duration-base) var(--ease-power4);
+  /*
+    `top` rather than a transform, because the value is shared: a transform
+    would move the button without moving the clip origin that is derived from
+    the same custom property, and the panel would open from beside it. One
+    fixed 72px circle relaying itself is not a layout cost worth the split.
+  */
+  transition: background-color var(--duration-base) var(--ease-power4),
+              top var(--duration-fast) var(--ease-power4);
 }
 
 .nav__toggle:hover { background-color: var(--color-accent); }
@@ -940,7 +979,11 @@ textarea.input { min-height: 120px; resize: none; }
 
 @media (max-width: 767px) {
   /* one place, and the toggle and the nav's clip origin both follow */
-  :root { --nav-toggle-size: 60px; --nav-toggle-top: 72px; }
+  :root {
+    --nav-toggle-size: 60px;
+    --nav-toggle-top: 72px;
+    --nav-toggle-top-raised: var(--space-md);
+  }
   .nav__social { width: 48px; height: 48px; }
 }
 
@@ -1778,6 +1821,7 @@ textarea.input { min-height: 120px; resize: none; }
   transform: translateY(-50%) rotate(2deg);
   pointer-events: none;
 }
+
 
 .sc-card-ghost {
   position: absolute;

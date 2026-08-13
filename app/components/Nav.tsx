@@ -14,6 +14,33 @@ const { label, links, meta } = data.nav;
 const { socials, email } = data.contact;
 
 /*
+  How long the panel stays on screen after `open` goes false. It does not
+  leave with the state — globals.css closes the clip-path over this long and
+  only then does `visibility` take it away — so anything torn down before it
+  is torn down in plain sight. Has to agree with the transition on
+  .nav__panel; the two are one decision.
+*/
+const CLOSE_MS = 720;
+
+/*
+  The toggle rides at --nav-toggle-top, which is set to clear the hero byline.
+  The moment the page moves at all that row starts leaving, and the offset
+  stops paying for anything — so the toggle comes up to
+  --nav-toggle-top-raised on the first real scroll rather than at some
+  landmark further down.
+
+  80px is about one notch of a wheel, and less than the byline's own block, so
+  it lands while the reader is still in the gesture that started it.
+
+  RAISE_BAND is hysteresis, and it is not optional. Scrolling settles on a
+  threshold as often as it crosses it, and without a band the class flickers
+  on and off there — which reads as the toggle wobbling rather than moving.
+*/
+const RAISE_AT = 80;
+const RAISE_BAND = 24;
+const RAISED = 'is-nav-raised';
+
+/*
   The fixed olive circle and the panel it opens. The panel stays mounted so
   its contents can be animated rather than mounted — `visibility` (set in CSS)
   is what takes it out of the tab order while it is closed.
@@ -30,6 +57,57 @@ const Nav = () => {
   const panelRef = useRef<HTMLDivElement | null>(null);
 
   const close = useCallback(() => setOpen(false), []);
+
+  /*
+    A close that has not finished yet: the context that opened the panel, and
+    the timer that reverts it once the panel is off screen. Held in a ref so a
+    reopen inside that window can settle it rather than let the two overlap.
+  */
+  const closing = useRef<{ ctx: gsap.Context; timer: number } | null>(null);
+
+  const settleClose = useCallback(() => {
+    const pending = closing.current;
+    if (!pending) return;
+
+    window.clearTimeout(pending.timer);
+    /*
+      Reverting early is safe here and only here: it parks the words back
+      below their line, which is where the fromTo about to run starts them
+      anyway, so the frame it lands on is the frame it was going to draw.
+    */
+    pending.ctx.revert();
+    closing.current = null;
+  }, []);
+
+  /* the timer must not outlive the component */
+  useEffect(() => settleClose, [settleClose]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    /*
+      Mirrors the class rather than reading it back off the DOM, so a scroll
+      event that changes nothing costs a comparison instead of a class write
+      and the style recalculation behind it.
+    */
+    let raised = false;
+
+    const sync = () => {
+      /* the band is only spent coming back down — going up, the mark is the mark */
+      const next = window.scrollY > (raised ? RAISE_AT - RAISE_BAND : RAISE_AT);
+      if (next === raised) return;
+
+      raised = next;
+      root.classList.toggle(RAISED, next);
+    };
+
+    sync();
+    window.addEventListener('scroll', sync, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', sync);
+      root.classList.remove(RAISED);
+    };
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -67,6 +145,9 @@ const Nav = () => {
   useEffect(() => {
     const panel = panelRef.current;
     if (!panel || !open) return;
+
+    /* reopened before the last close finished tidying up */
+    settleClose();
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
@@ -135,8 +216,24 @@ const Nav = () => {
       );
     }, panel);
 
-    return () => ctx.revert();
-  }, [open]);
+    /*
+      Not `ctx.revert()`. This runs the moment `open` goes false, and the
+      panel is still on screen for CLOSE_MS after that — reverting here snaps
+      every word back below its line, the socials back to scale 0 and the
+      address back down its 18px, all of it in view, as one jump at the top of
+      the close. Wait until the panel is actually gone, and none of it is
+      seen; a reopen before then is handled by settleClose above.
+    */
+    return () => {
+      closing.current = {
+        ctx,
+        timer: window.setTimeout(() => {
+          ctx.revert();
+          closing.current = null;
+        }, CLOSE_MS),
+      };
+    };
+  }, [open, settleClose]);
 
   return (
     <>
