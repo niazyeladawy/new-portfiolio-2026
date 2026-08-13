@@ -410,6 +410,33 @@ input[type='radio'] {
   max-height: 320px;
 }
 
+/*
+  Seals the bottom edge. The svg is sized from its own ratio — 1511:404 across
+  a 390px phone is 104.28px — so its last row is a fraction of a pixel, and the
+  arc gets antialiased there against this box's own `from` colour. That blend
+  reads as a hairline of the panel above, laid across the join.
+
+  The -1px above was meant to hide it under the next section, and cannot: this
+  box carries --z-default and the sections it sits between do not, so the dome
+  is what paints on top of the overlap it opens. Sealing the edge here rather
+  than reordering the two keeps the fix inside the component.
+
+  currentColor is the arriving tone, the same value .dome--* gives the path to
+  fill with, so the strip is by construction the colour the join should be. It
+  can never cover anything else: the path's bottom edge runs the full width at
+  every step of the morph — L0,404 H1511 at rest, a flat rectangle once the
+  sides have closed.
+*/
+.dome::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  background-color: currentColor;
+}
+
 .dome--ivory     { color: var(--color-background); }
 .dome--sand      { color: var(--color-sand); }
 .dome--olive     { color: var(--color-primary); }
