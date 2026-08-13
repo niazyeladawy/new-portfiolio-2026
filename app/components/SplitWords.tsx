@@ -21,6 +21,16 @@ const useIsoLayoutEffect =
 
 const WORD = 'splitted__word';
 const WRAP = 'splitted__word-wrap';
+/*
+  Rendered on the server and taken off by the effect below. Between the two
+  there is a window — one whole download of the JS on a slow connection — in
+  which the markup is on screen but nothing has parked it below its line yet,
+  and the heading shows itself at rest before dropping away to rise again.
+  Hiding it in the markup closes that window; see globals.css for the rule,
+  and layout.tsx for the <noscript> that puts the words back if the script
+  will never arrive.
+*/
+const PARKED = 'is-parked';
 
 /*
   Flatten children into one word per entry. Text nodes split on whitespace;
@@ -110,6 +120,17 @@ const SplitWords = ({
     const root = rootRef.current;
     if (!root) return;
 
+    /*
+      Unhide first, whatever happens after it. The markup hides itself until
+      this line runs, so every early return below has to pass through here or
+      the heading never appears at all. It is a class rather than React state:
+      the mask is toggled the same way further down, and a re-render would
+      write the whole className back over it.
+    */
+    root
+      .querySelectorAll(`.${WORD}`)
+      .forEach((word) => word.classList.remove(PARKED));
+
     const wraps = gsap.utils.toArray<HTMLElement>(`.${WRAP}`, root);
     if (wraps.length === 0) return;
 
@@ -181,7 +202,7 @@ const SplitWords = ({
               words in a line run together.
             */}
             {i > 0 && !isBreak(parts[i - 1]) ? ' ' : null}
-            <span className={WORD}>
+            <span className={`${WORD} ${PARKED}`}>
               <span className={WRAP}>{part}</span>
             </span>
           </Fragment>

@@ -72,6 +72,11 @@ const About = () => {
     return () => stops.forEach((stop) => stop());
   }, []);
 
+  /*
+    The pin runs at every width, phones included — globals.css brings the
+    section down to one screen's worth of content on a phone rather than
+    unpinning it, so there is no breakpoint for this to agree with.
+  */
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;

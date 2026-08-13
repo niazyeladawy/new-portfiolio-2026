@@ -79,8 +79,19 @@ const token = (name: string, fallback: string) => {
   return value || fallback;
 };
 
-/* the display face, spelled out: canvas cannot resolve --font-display */
-const DISPLAY_STACK = "'Veneer', 'Anton', ui-sans-serif, system-ui, sans-serif";
+/*
+  The display face for canvas, which cannot take a `var()` in ctx.font. Read
+  off :root rather than spelled out here, for the same reason the colours
+  above are: --font-display is where the stack is decided, and a second copy
+  of it in this file is a copy that goes stale — this one was still naming
+  Veneer, and its fallback, long after neither was loaded.
+
+  It also picks up 'Bebas Neue Fallback', the metric-matched face next/font
+  emits beside the real one, which a hand-written stack would not think to
+  name.
+*/
+const displayStack = () =>
+  token('--font-display', "'Bebas Neue', ui-sans-serif, system-ui, sans-serif");
 
 const VERTEX = /* glsl */ `
   varying vec2 vUv;
@@ -174,8 +185,15 @@ const makeTitleTexture = (label: string, aspect: number) => {
       than the image, so it projects a little larger than the panel beneath.
     */
     const maxWidth = width * 0.78;
-    /* weight 400 and uppercase — the display face has one weight and one case */
-    const font = (size: number) => `400 ${size}px ${DISPLAY_STACK}`;
+    /*
+      The display face's own weight and case, same as every display rule in
+      the stylesheet. Both have to be spelled out here: canvas takes neither a
+      `var()` nor a text-transform, so the weight comes off :root and the
+      label is upper-cased below.
+    */
+    const stack = displayStack();
+    const weight = token('--weight-display', '500');
+    const font = (size: number) => `${weight} ${size}px ${stack}`;
 
     // canvas text scales linearly with font size, so one measurement fits it
     const fit = (rows: string[]) => {
@@ -209,7 +227,19 @@ const makeTitleTexture = (label: string, aspect: number) => {
     ctx.shadowOffsetY = size * 0.08;
     ctx.fillStyle = token('--color-white', '#FFFFFF');
 
-    const lineHeight = size * 1.12;
+    /*
+      The face's own line box, not a multiplier of ours: display type is never
+      given an adjusted leading, and canvas has no `normal` to ask for.
+      fontBoundingBox* is that metric, read straight off the font now loaded
+      at this size — so it follows the face rather than having to be retuned
+      alongside it, which the 1.12 that used to sit here did not.
+
+      The 1.2 behind it is for a browser too old to report the metric (this
+      landed in Firefox 116); it is a stand-in, not a design figure.
+    */
+    const box = ctx.measureText(caps);
+    const lineHeight =
+      box.fontBoundingBoxAscent + box.fontBoundingBoxDescent || size * 1.2;
     const first = height * 0.46 - ((lines.length - 1) * lineHeight) / 2;
     lines.forEach((line, i) =>
       ctx.fillText(line, width / 2, first + i * lineHeight)
